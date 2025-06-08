@@ -3,18 +3,20 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SRMCore", "SRMCore\SRMCore.csproj", "{A342F12A-BA0C-4305-8E06-EBFF52DC1C74}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SRMAuth", "SRMAuth\SRMAuth.csproj", "{5EBF1720-D5E9-4A3B-915F-C478B5EEA54D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SRMAgent", "SRMAgent\SRMAgent.csproj", "{7803DA41-3585-4559-9B7C-C98003F48FE8}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SRMApp", "SRMApp\SRMApp.csproj", "{E3402767-A451-43BB-8584-827724BAACC4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ContainerServices", "ContainerServices", "{238D20A2-AD93-4677-B3FA-92EF781E6117}"
 	ProjectSection(SolutionItems) = preProject
 		ContainerServices\README.md = ContainerServices\README.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecureArchApp", "SecureArchApp\SecurityArchApp\SecureArchApp.csproj", "{B35B50B7-FBFD-FFAA-DDA0-966F0B7B7C7F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecureArchApp.Client", "SecureArchApp\SecurityArchApp.Client\SecureArchApp.Client.csproj", "{913A79DC-2981-05BF-A8B4-30178D326522}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecureArchCore", "SecureArchCore\SecureArchCore.csproj", "{CFEE171F-B6D3-86FA-4EDB-E3B7F47C1728}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,10 +24,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A342F12A-BA0C-4305-8E06-EBFF52DC1C74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A342F12A-BA0C-4305-8E06-EBFF52DC1C74}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A342F12A-BA0C-4305-8E06-EBFF52DC1C74}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A342F12A-BA0C-4305-8E06-EBFF52DC1C74}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5EBF1720-D5E9-4A3B-915F-C478B5EEA54D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5EBF1720-D5E9-4A3B-915F-C478B5EEA54D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5EBF1720-D5E9-4A3B-915F-C478B5EEA54D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -34,10 +32,18 @@ Global
 		{7803DA41-3585-4559-9B7C-C98003F48FE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7803DA41-3585-4559-9B7C-C98003F48FE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7803DA41-3585-4559-9B7C-C98003F48FE8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E3402767-A451-43BB-8584-827724BAACC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E3402767-A451-43BB-8584-827724BAACC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E3402767-A451-43BB-8584-827724BAACC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E3402767-A451-43BB-8584-827724BAACC4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B35B50B7-FBFD-FFAA-DDA0-966F0B7B7C7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B35B50B7-FBFD-FFAA-DDA0-966F0B7B7C7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B35B50B7-FBFD-FFAA-DDA0-966F0B7B7C7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B35B50B7-FBFD-FFAA-DDA0-966F0B7B7C7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{913A79DC-2981-05BF-A8B4-30178D326522}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{913A79DC-2981-05BF-A8B4-30178D326522}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{913A79DC-2981-05BF-A8B4-30178D326522}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{913A79DC-2981-05BF-A8B4-30178D326522}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFEE171F-B6D3-86FA-4EDB-E3B7F47C1728}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFEE171F-B6D3-86FA-4EDB-E3B7F47C1728}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFEE171F-B6D3-86FA-4EDB-E3B7F47C1728}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFEE171F-B6D3-86FA-4EDB-E3B7F47C1728}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
