@@ -1,0 +1,16 @@
+FROM postgres:latest
+
+ENV POSTGRES_USER=myuser
+ENV POSTGRES_DB=crisiscontrol
+
+# Create a directory to mount as the PostgreSQL data directory
+RUN mkdir -p /opt/postgres
+
+# Set the mounted directory as the PostgreSQL data directory
+VOLUME /opt/postgres
+
+# Copy the custom pg_hba.conf into the container
+COPY pg_hba.conf /etc/postgresql/
+ 
+COPY setup.sql /docker-entrypoint-initdb.d/
+EXPOSE 5432
