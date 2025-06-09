@@ -1,0 +1,9 @@
+FROM redis:latest
+
+COPY redis.conf /usr/local/etc/redis/redis.conf.template
+
+# Install gettext-base for envsubst
+RUN apt-get update && apt-get install -y gettext-base && rm -rf /var/lib/apt/lists/*
+
+# Use an entrypoint script to substitute the environment variable and then start Redis
+CMD envsubst < /usr/local/etc/redis/redis.conf.template > /usr/local/etc/redis/redis.conf && redis-server /usr/local/etc/redis/redis.conf
