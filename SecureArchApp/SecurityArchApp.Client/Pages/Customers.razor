@@ -1,7 +1,9 @@
 ﻿@page "/customers"
 @inject HttpClient Http
+
 @using SecurityArch.Models
 @using SecureArchApp
+
 
 <PageTitle>Kunden</PageTitle>
 
@@ -44,14 +46,15 @@
     private List<Customer>? customers;
 
     protected override async Task OnInitializedAsync()
+
     {
+        
         try
         {
             customers = await Http.GetFromJsonAsync<List<Customer>>("https://localhost:7254/CoreService/GetCustomers");
         }
         catch (Exception ex)
         {
-            // Fehlerbehandlung kann ergänzt werden
             Console.Error.WriteLine($"Fehler beim Laden der Kunden: {ex.Message}");
         }
     }

@@ -1,0 +1,87 @@
+﻿@page "/login"
+@using System.Net
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@rendermode InteractiveAuto
+
+
+<MudPaper Class="d-flex justify-center align-center" Style="height: 100vh">
+    <MudCard Style="width: 400px;" Elevation="4" Class="pa-6">
+        <MudCardContent>
+            <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4">Login</MudText>
+
+            <MudTextField Label="Username" @bind-Value="Username" Variant="Variant.Filled" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person" />
+
+            <MudTextField Label="Password" @bind-Value="Password" Variant="Variant.Filled" InputType="InputType.Password" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock" Class="mt-3" />
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Login" Class="mt-5" FullWidth="true">Login</MudButton>
+
+            <MudText Typo="Typo.body2" Color="Color.Error" Class="mt-4 text-center">@Message</MudText>
+        </MudCardContent>
+    </MudCard>
+</MudPaper>
+
+
+
+<p>@Message</p>
+
+@code {
+    string Username = "";
+    string Password = "";
+    string Message = "";
+
+    string returnUrl = "/"; 
+
+    protected override void OnInitialized()
+    {
+        var uri = new Uri(Nav.Uri);
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+
+        if (query.TryGetValue("returnUrl", out var url))
+        {
+            returnUrl = url;
+        }
+    }
+    async Task Login()
+    {
+        Message = "";
+        var loginRequest = new { Username, Password };
+
+        var response = await Http.PostAsJsonAsync("https://localhost:7254/CoreService/login", loginRequest);
+        if (response.StatusCode == HttpStatusCode.Found) // 302
+        {
+            var redirectUrl = response.Headers.Location;
+            Console.WriteLine($"Wurde weitergeleitet zu: {redirectUrl}");
+        }
+
+        if (response.IsSuccessStatusCode)
+        {
+            var json = await response.Content.ReadFromJsonAsync<TokenResponse>();
+
+            if (json != null)
+            {
+                await JS.InvokeVoidAsync("localStorage.setItem", "access_token", json.access_token);
+                await JS.InvokeVoidAsync("localStorage.setItem", "refresh_token", json.refresh_token);
+
+                Message = "Login erfolgreich!";
+                Nav.NavigateTo(returnUrl);
+            }
+            else
+            {
+                Message = "Ungültige Antwort vom Server.";
+            }
+        }
+        else
+        {
+            Message = "Login fehlgeschlagen";
+        }
+    }
+
+    class TokenResponse
+    {
+        public string access_token { get; set; }
+        public string refresh_token { get; set; }
+    }
+}
+
