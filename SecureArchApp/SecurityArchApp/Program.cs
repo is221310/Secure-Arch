@@ -1,6 +1,10 @@
+using Blazored.LocalStorage;
 using MudBlazor.Services;
 using SecureArchApp.Client.Pages;
 using SecureArchApp.Components;
+using SecureArchApp.Services;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +15,7 @@ builder.Services.AddMudServices();
 builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
 
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorClient", policy =>
@@ -20,7 +25,16 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddScoped(sp =>
+{
+    var httpClient = new HttpClient { BaseAddress = new Uri("https://deine-api-url.de/") };
+    return httpClient;
+});
+builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddScoped<AuthService>();
+
 var app = builder.Build();
+app.UseCors("AllowBlazorClient"); // CORS-Middleware einsetzen
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
