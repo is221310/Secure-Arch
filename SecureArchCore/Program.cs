@@ -1,7 +1,11 @@
 
 using SecurityArch;
 using Microsoft.EntityFrameworkCore;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.Extensions.Options;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace SecureArchCore;
 
@@ -17,7 +21,7 @@ public class Program
 
         // Add services to the container.
 
-     
+        builder.Services.AddHttpClient();
 
         builder.Services.AddControllers();
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -30,6 +34,27 @@ public class Program
                 policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
             });
         });
+        builder.Services.AddAuthentication(opt =>
+        {
+            opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = false,
+                ValidateIssuerSigningKey = false,
+                ValidIssuer = "https://www.derweinberger.at",
+                ValidAudience = "https://www.derweinberger.at",
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("REDACTED_CAUSE_GITHUB"))
+            };
+        });
+
+
+
 
         var app = builder.Build();
 
@@ -42,6 +67,7 @@ public class Program
         app.UseCors("AllowBlazorClient");
         app.UseHttpsRedirection();
 
+        app.UseAuthentication();
         app.UseAuthorization();
 
 
