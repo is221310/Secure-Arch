@@ -21,7 +21,6 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
     - [Backend \& Frontend (lokal)](#backend--frontend-lokal)
     - [Agent (z. B. auf Raspberry Pi)](#agent-zb-auf-raspberry-pi)
   - [👥 Teammitglieder](#-teammitglieder)
-  - [| Haris Cemo            | is221336@fhstp.ac.at  |](#-haris-cemo-------------is221336fhstpacat--)
   - [📄 Lizenz](#-lizenz)
   - [📎 Anhang](#-anhang)
 
@@ -139,6 +138,7 @@ dotnet run
 | Abdulmalek Badra      | is231329@fhstp.ac.at  |
 | Judith Neuhuber       | is221312@fhstp.ac.at  |
 | Haris Cemo            | is221336@fhstp.ac.at  |
+
 ---
 
 ## 📄 Lizenz
