@@ -23,7 +23,10 @@ user_router = APIRouter(
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
 async def create_user(data: CreateUserRequest, db: Session = Depends(get_db)):
-    await create_user_account(data=data, db=db)
-    payload = {"message": "User account has been succesfully created."}
-    return JSONResponse(content=payload)
-
+    try:
+        await create_user_account(data=data, db=db)
+        payload = {"message": "User account has been succesfully created."}
+        return JSONResponse(content=payload)
+    except Exception as e:
+        payload = {"message": "An error occurred while creating the user account."}
+        return JSONResponse(content=payload, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)

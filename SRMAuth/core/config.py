@@ -28,4 +28,3 @@ class DatabaseSettings(BaseSettings):
 
     class Config:
         env_file = ".env"
-    #DB_URL: str = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
