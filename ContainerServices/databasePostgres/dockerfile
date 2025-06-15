@@ -1,10 +1,6 @@
 FROM postgres:latest
 
 
-# TODO: REMOVE THESE LINES IN PRODUCTION 
-ENV POSTGRES_USER=admin
-ENV POSTGRES_PASSWORD=jidfkwshfj9o234hi4uoh32o
-ENV POSTGRES_DB=securearch
 
 # Create a directory to mount as the PostgreSQL data directory
 RUN mkdir -p /opt/postgres
