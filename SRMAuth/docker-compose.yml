@@ -10,6 +10,9 @@ services:
     volumes:
       - redis_data:/data
     restart: unless-stopped
+    networks:
+      app_network:
+        ipv4_address: 172.20.0.10
 
   app:
     build:
@@ -21,7 +24,43 @@ services:
       - .env
     depends_on:
       - redis
+      - postgres
     restart: unless-stopped
+    networks:
+      app_network:
+        ipv4_address: 172.20.0.20
+      database_network:
+        ipv4_address: 172.21.0.20
+
+  postgres:
+    build: ../ContainerServices/databasePostgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      database_network:
+        ipv4_address: 172.21.0.10
 
 volumes:
   redis_data:
+  postgres_data:
+
+networks:
+  app_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+  database_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+          gateway: 172.21.0.1

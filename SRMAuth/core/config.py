@@ -9,12 +9,23 @@ class JWTSettings(BaseSettings):
     JWT_REFRESH_EXPIRATION_TIME: int
 
 class redisSettings(BaseSettings):
-    REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6379
-    REDIS_DB: int = 0
+    REDIS_HOST: str 
+    REDIS_PORT: int 
+    REDIS_DB: int 
     REDIS_PASSWORD: str
-    Decode_Response: bool = True
+    Decode_Response: bool 
     
     class Config:
         env_file = ".env"
 
+class DatabaseSettings(BaseSettings):
+    POSTGRES_HOST: str 
+    POSTGRES_PORT: int 
+    POSTGRES_DB: str 
+    POSTGRES_USER: str 
+    POSTGRES_PASSWORD: str
+    POSTGRES_Schema: str 
+
+    class Config:
+        env_file = ".env"
+    #DB_URL: str = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
