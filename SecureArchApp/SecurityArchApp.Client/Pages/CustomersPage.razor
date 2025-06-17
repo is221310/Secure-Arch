@@ -1,0 +1,124 @@
+﻿@page "/kunden"
+@inject HttpClient Http
+@inject IDialogService DialogService
+@using SecureArchApp.Client.Models
+
+@using MudBlazor
+
+<MudPaper Class="p-4">
+    <MudText Typo="Typo.h5">Kundenverwaltung</MudText>
+
+    <MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="OpenNeuerDialog" Class="my-3">
+        Neuer Kunde
+    </MudButton>
+
+    <MudTable Items="kunden" Dense="true" Bordered="true" Hover="true" Elevation="1">
+        <HeaderContent>
+            <MudTh>id</MudTh>
+            <MudTh>Name</MudTh>
+            <MudTh>Erstellt am</MudTh>
+            <MudTh>Aktionen</MudTh>
+        </HeaderContent>
+        <RowTemplate Context="kunde">
+            <MudTd>@kunde.kunden_id</MudTd>
+            <MudTd>@kunde.kunden_name</MudTd>
+            <MudTd>@kunde.CreatedAt.ToShortDateString()</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => OpenBearbeitenDialog(kunde)" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteKunde(kunde.kunden_id)" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+
+    @if (_formularSichtbar)
+    {
+        <MudPaper Class="p-4 my-4" Elevation="1">
+            <MudText Typo="Typo.h6">@(_bearbeiteKunde.kunden_id == 0 ? "Neuer Kunde" : "Kunde bearbeiten")</MudText>
+
+            <MudTextField @bind-Value="_bearbeiteKunde.kunden_name" Label="Kundenname" Required="true" Class="my-2" />
+
+            <MudStack Direction="Row" Spacing="2">
+                <MudButton Color="Color.Secondary" OnClick="AbbrechenFormular">Abbrechen</MudButton>
+                <MudButton Color="Color.Primary" OnClick="SpeichernKunde">Speichern</MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+    </MudPaper>
+
+    @code {
+    private List<Kunde> kunden = new();
+    private Kunde _bearbeiteKunde = new();
+    private bool _formularSichtbar = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LadeKunden();
+    }
+
+    private async Task LadeKunden()
+    {
+        kunden = await Http.GetFromJsonAsync<List<Kunde>>("api/kunde") ?? new();
+    }
+
+    private void OpenNeuerDialog()
+    {
+        _bearbeiteKunde = new Kunde(); // Neuer Kunde
+        _formularSichtbar = true;
+    }
+
+    private void OpenBearbeitenDialog(Kunde kunde)
+    {
+        _bearbeiteKunde = new Kunde
+            {
+                kunden_id = kunde.kunden_id,
+                kunden_name = kunde.kunden_name,
+                CreatedAt = kunde.CreatedAt
+            };
+        _formularSichtbar = true;
+    }
+
+    private void AbbrechenFormular()
+    {
+        _formularSichtbar = false;
+        _bearbeiteKunde = new Kunde();
+    }
+
+    private async Task SpeichernKunde()
+    {
+        if (string.IsNullOrWhiteSpace(_bearbeiteKunde.kunden_name))
+            return;
+
+        HttpResponseMessage response;
+
+        if (_bearbeiteKunde.kunden_id == 0)
+        {
+            response = await Http.PostAsJsonAsync("api/kunde", _bearbeiteKunde);
+        }
+        else
+        {
+            response = await Http.PutAsJsonAsync($"api/kunde/{_bearbeiteKunde.kunden_id}", _bearbeiteKunde);
+        }
+
+        if (response.IsSuccessStatusCode)
+        {
+            _formularSichtbar = false;
+            await LadeKunden();
+        }
+    }
+
+    private async Task DeleteKunde(int kundenId)
+    {
+        bool? confirmed = await DialogService.ShowMessageBox(
+           "Löschen bestätigen",
+           "Diesen Kunden wirklich löschen?",
+           yesText: "Ja", cancelText: "Nein");
+
+        if (confirmed == true)
+        {
+            await Http.DeleteAsync($"api/kunde/{kundenId}");
+            await LadeKunden();
+        }
+    }
+
+
+}

@@ -1,0 +1,153 @@
+﻿@page "/users"
+@inject HttpClient Http
+@inject IDialogService DialogService
+
+@using SecureArchApp.Client.Models
+
+<MudPaper Class="p-4">
+    <MudText Typo="Typo.h5">Userverwaltung</MudText>
+
+    <MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="OpenNeuerForm" Class="my-3">
+        Neuer User
+    </MudButton>
+
+    @if (_formularSichtbar)
+    {
+        <MudPaper Class="p-4 mb-4" Elevation="2">
+            <MudText Typo="Typo.h6">@(_bearbeiteUser.id == 0 ? "Neuer User" : "User bearbeiten")</MudText>
+
+            <MudTextField @bind-Value="_bearbeiteUser.firstname" Label="Vorname" Required="true" />
+            <MudTextField @bind-Value="_bearbeiteUser.lastname" Label="Nachname" Required="true" />
+            <MudTextField @bind-Value="_bearbeiteUser.email" Label="E-Mail" Required="true" />
+            <MudTextField @bind-Value="_bearbeiteUser.password" Label="Passwort" InputType="InputType.Password" Required="@(_bearbeiteUser.id == 0)" />
+            <MudTextField @bind-Value="_bearbeiteUser.telephone" Label="Telefon" />
+            <MudTextField @bind-Value="_bearbeiteUser.address" Label="Adresse" />
+
+            <MudButton Color="Color.Primary" OnClick="SpeichernUser" Class="mt-3">Speichern</MudButton>
+            <MudButton Color="Color.Secondary" OnClick="CloseForm" Class="mt-3 ml-2">Abbrechen</MudButton>
+        </MudPaper>
+    }
+
+    <MudTable Items="users" Dense="true" Bordered="true" Hover="true" Elevation="1">
+        <HeaderContent>
+            <MudTh>id</MudTh>
+            <MudTh>Vorname</MudTh>
+            <MudTh>Nachname</MudTh>
+            <MudTh>E-Mail</MudTh>
+            <MudTh>Telefon</MudTh>
+            <MudTh>Rolle</MudTh>
+            <MudTh>Kunde</MudTh>
+            <MudTh>Aktionen</MudTh>
+        </HeaderContent>
+        <RowTemplate Context="user">
+            <MudTd>@user.id</MudTd>
+            <MudTd>@user.firstname</MudTd>
+            <MudTd>@user.lastname</MudTd>
+            <MudTd>@user.email</MudTd>
+            <MudTd>@user.telephone</MudTd>
+            <MudTd>@user.role</MudTd>
+            <MudTd>@(kunden.FirstOrDefault(k => k.kunden_id == user.kunden_id)?.kunden_name ?? "-")</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => OpenBearbeitenForm(user)" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteUser(user.id)" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudPaper>
+
+@code {
+    private List<User> users = new();
+    private List<Kunde> kunden = new();
+
+    private User _bearbeiteUser = new();
+    private bool _formularSichtbar = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LadeUser();
+        await LadeKunden();
+    }
+
+    private async Task LadeUser()
+    {
+        users = await Http.GetFromJsonAsync<List<User>>("api/user") ?? new();
+    }
+
+    private async Task LadeKunden()
+    {
+        kunden = await Http.GetFromJsonAsync<List<Kunde>>("api/kunde") ?? new();
+    }
+
+    private void OpenNeuerForm()
+    {
+        _bearbeiteUser = new User();
+        _formularSichtbar = true;
+    }
+
+    private void OpenBearbeitenForm(User user)
+    {
+        _bearbeiteUser = new User
+            {
+                id = user.id,
+                firstname = user.firstname,
+                lastname = user.lastname,
+                email = user.email,
+                role = user.role,
+                password = "", // Passwort leer lassen beim Bearbeiten
+                telephone = user.telephone,
+                address = user.address,
+                kunden_id = user.kunden_id
+            };
+        _formularSichtbar = true;
+    }
+
+    private void CloseForm()
+    {
+        _formularSichtbar = false;
+    }
+
+    private async Task SpeichernUser()
+    {
+        if (string.IsNullOrWhiteSpace(_bearbeiteUser.firstname) ||
+            string.IsNullOrWhiteSpace(_bearbeiteUser.lastname) ||
+            string.IsNullOrWhiteSpace(_bearbeiteUser.email) ||
+            string.IsNullOrWhiteSpace(_bearbeiteUser.role) ||
+            (_bearbeiteUser.id == 0 && string.IsNullOrWhiteSpace(_bearbeiteUser.password)))
+            return;
+
+        HttpResponseMessage response;
+
+        if (_bearbeiteUser.id == 0)
+        {
+            response = await Http.PostAsJsonAsync("api/user", _bearbeiteUser);
+        }
+        else
+        {
+            response = await Http.PutAsJsonAsync($"api/user/{_bearbeiteUser.id}", _bearbeiteUser);
+        }
+
+        if (response.IsSuccessStatusCode)
+        {
+            _formularSichtbar = false;
+            await LadeUser();
+        }
+        else
+        {
+            // Fehlerbehandlung hier ergänzen
+        }
+    }
+
+    private async Task DeleteUser(int userId)
+    {
+        bool? confirmed = await DialogService.ShowMessageBox(
+            "Löschen bestätigen",
+            "Diesen User wirklich löschen?",
+            yesText: "Ja", cancelText: "Nein");
+
+        if (confirmed == true)
+        {
+            await Http.DeleteAsync($"api/user/{userId}");
+            await LadeUser();
+        }
+    }
+}

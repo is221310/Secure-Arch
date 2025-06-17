@@ -36,7 +36,7 @@ public class AppDbContext : DbContext
             entity.HasOne(u => u.Kunde)
                 .WithMany(k => k.Users)
                 .HasForeignKey(u => u.kunden_id)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Sensor>(entity =>

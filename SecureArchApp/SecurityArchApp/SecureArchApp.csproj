@@ -6,6 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="..\SecurityArchApp.Client\Pages\Component.razor" Link="Component.razor" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <ProjectReference Include="..\SecurityArchApp.Client\SecureArchApp.Client.csproj" />

@@ -6,8 +6,8 @@ public class Kunde
     public string kunden_name { get; set; }
     public DateTime created_at { get; set; }
 
-    public ICollection<User> Users { get; set; }
-    public ICollection<Sensor> Sensoren { get; set; }
+    public ICollection<User>? Users { get; set; }
+    public ICollection<Sensor>? Sensoren { get; set; }
 }
 
 public class User
@@ -23,9 +23,12 @@ public class User
     public DateTime created { get; set; }
 
     public int? kunden_id { get; set; }
+   
+
     [JsonIgnore]
-    public Kunde Kunde { get; set; }
+    public Kunde? Kunde { get; set; }
 }
+
 
 public class Sensor
 {
@@ -34,7 +37,7 @@ public class Sensor
     public string beschreibung { get; set; }
     public DateTime created_at { get; set; }
 
-    public int kunden_id { get; set; }
+    public int? kunden_id { get; set; }
     [JsonIgnore]
-    public Kunde Kunde { get; set; }
+    public Kunde? Kunde { get; set; }
 }

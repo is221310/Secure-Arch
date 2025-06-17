@@ -1,10 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SecureArchCore.Models;
-using SecurityArch.Models;
-using System;
-using System.Net.Http;
+
 using System.Text.Json;
 
 namespace SecurityArch.Controllers;
