@@ -48,6 +48,7 @@
         Message = "";
         var loginRequest = new { Username, Password };
 
+
         var response = await Http.PostAsJsonAsync("https://localhost:7254/CoreService/login", loginRequest);
         if (response.StatusCode == HttpStatusCode.Found) // 302
         {
@@ -57,20 +58,20 @@
 
         if (response.IsSuccessStatusCode)
         {
-            var json = await response.Content.ReadFromJsonAsync<TokenResponse>();
+            //var json = await response.Content.ReadFromJsonAsync<TokenResponse>();
 
-            if (json != null)
-            {
-                await JS.InvokeVoidAsync("localStorage.setItem", "access_token", json.access_token);
-                await JS.InvokeVoidAsync("localStorage.setItem", "refresh_token", json.refresh_token);
+            //if (json != null)
+            //{
+            //    await JS.InvokeVoidAsync("localStorage.setItem", "access_token", json.access_token);
+            //    await JS.InvokeVoidAsync("localStorage.setItem", "refresh_token", json.refresh_token);
 
-                Message = "Login erfolgreich!";
-                Nav.NavigateTo(returnUrl);
-            }
-            else
-            {
-                Message = "Ungültige Antwort vom Server.";
-            }
+            Message = "Login erfolgreich!";
+            Nav.NavigateTo(returnUrl);
+            //}
+           // else
+         //   {
+          //      Message = "Ungültige Antwort vom Server.";
+           // }
         }
         else
         {

@@ -1,0 +1,130 @@
+﻿@page "/sensorzuweisung"
+@inject HttpClient Http
+
+@using System.Text.Json.Serialization
+@using MudBlazor
+
+<MudPaper Class="pa-4">
+
+    <MudText Typo="Typo.h5" Class="mb-4">Sensor-Kunden-Zuweisung</MudText>
+
+    <MudTable Items="sensoren" Dense="true" Hover="true" Bordered="true" Elevation="1">
+        <HeaderContent>
+            <MudTh>Sensor ID</MudTh>
+            <MudTh>Sensor Name</MudTh>
+            <MudTh>Beschreibung</MudTh>
+            <MudTh>Kunde</MudTh>
+            <MudTh>Zuweisen</MudTh>
+        </HeaderContent>
+        <RowTemplate Context="sensor">
+            <MudTd>@sensor.SensorId</MudTd>
+            <MudTd>@sensor.SensorName</MudTd>
+            <MudTd>@sensor.Beschreibung</MudTd>
+            <MudTd>@GetKundenName(sensor.KundenId)</MudTd>
+            <MudTd>
+                <MudSelect T="int" Label="Kunde wählen"
+                           Value="@GetKundenId(sensor.SensorId)"
+                           ValueChanged="@(v => SetKundenId(sensor.SensorId, v))"
+                           Dense="true"
+                           Style="min-width:150px">
+                    <MudSelectItem Value="0">-- wählen --</MudSelectItem>
+                    @foreach (var kunde in kunden)
+                    {
+                        <MudSelectItem Value="@kunde.KundenId">@kunde.KundenName</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+
+    <MudButton Class="mt-4" Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAssignments">
+        Zuweisungen speichern
+    </MudButton>
+
+</MudPaper>
+
+@code {
+    private List<KundeDto> kunden = new();
+    private List<SensorDto> sensoren = new();
+    private Dictionary<int, int> zuweisungWerte = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        kunden = await Http.GetFromJsonAsync<List<KundeDto>>("api/kunde") ?? new();
+        sensoren = await Http.GetFromJsonAsync<List<SensorDto>>("api/sensor") ?? new();
+
+        // Initialize dictionary with existing assignments or 0
+        foreach (var s in sensoren)
+        {
+            zuweisungWerte[s.SensorId] = s.KundenId ?? 0;
+        }
+    }
+
+    private int GetKundenId(int sensorId)
+    {
+        return zuweisungWerte.TryGetValue(sensorId, out var kundenId) ? kundenId : 0;
+    }
+
+    private void SetKundenId(int sensorId, int kundenId)
+    {
+        zuweisungWerte[sensorId] = kundenId;
+    }
+
+    private string GetKundenName(int? kundenId)
+    {
+        if (kundenId == null || kundenId == 0)
+            return "-";
+
+        var kunde = kunden.FirstOrDefault(k => k.KundenId == kundenId);
+        return kunde?.KundenName ?? "-";
+    }
+
+    private async Task SaveAssignments()
+    {
+        // Beispiel: Daten an API schicken (z.B. POST /api/sensor/assignments)
+        var payload = zuweisungWerte.Select(kvp => new
+        {
+            sensor_id = kvp.Key,
+            kunden_id = kvp.Value == 0 ? (int?)null : kvp.Value
+        }).ToList();
+
+        var response = await Http.PostAsJsonAsync("api/sensor/assignments", payload);
+
+        if (response.IsSuccessStatusCode)
+        {
+           
+            await OnInitializedAsync();
+            Snackbar.Add("Zuweisungen gespeichert!", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Fehler beim Speichern", Severity.Error);
+        }
+    }
+
+    public class KundeDto
+    {
+        [JsonPropertyName("kunden_id")]
+        public int KundenId { get; set; }
+
+        [JsonPropertyName("kunden_name")]
+        public string KundenName { get; set; } = "";
+    }
+
+    public class SensorDto
+    {
+        [JsonPropertyName("sensor_id")]
+        public int SensorId { get; set; }
+
+        [JsonPropertyName("sensor_name")]
+        public string SensorName { get; set; } = "";
+
+        [JsonPropertyName("beschreibung")]
+        public string Beschreibung { get; set; } = "";
+
+        [JsonPropertyName("kunden_id")]
+        public int? KundenId { get; set; }
+    }
+
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+}

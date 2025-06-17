@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SecureArchCore.Models;
 using SecurityArch.Models;
 using System;
 using System.Net.Http;
@@ -21,15 +22,7 @@ public class CoreServiceController : ControllerBase
         _context = context;
         _httpClient = httpClientFactory.CreateClient();
     }
-    [Authorize]
-    [HttpGet]
-    [Route("GetCustomers")]
-    public async Task<ActionResult<IEnumerable<Customer>>> GetCustomers()
-    {
-        var customers = await _context.Customers.ToListAsync();
-        return Ok(customers);
-    }
-
+   
 
 
     public class LoginRequest
@@ -37,6 +30,33 @@ public class CoreServiceController : ControllerBase
         public string Username { get; set; }
         public string Password { get; set; }
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetKunden()
+    {
+        var kunden = await _context.Kunden
+            .Include(k => k.Users)
+            .Include(k => k.Sensoren)
+            .ToListAsync();
+
+        return Ok(kunden);
+    }
+
+    
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetKunde(int id)
+    {
+        var kunde = await _context.Kunden
+            .Include(k => k.Users)
+            .Include(k => k.Sensoren)
+            .FirstOrDefaultAsync(k => k.kunden_id == id);
+
+        if (kunde == null)
+            return NotFound();
+
+        return Ok(kunde);
+    }
+
 
     [HttpPost]
     [Route("login")]
@@ -47,6 +67,7 @@ public class CoreServiceController : ControllerBase
             return BadRequest("Username und Passwort müssen gesetzt sein.");
         }
 
+        //TODO aus Env holen 
         var apiUrl = "http://localhost:8000/auth/token";
 
         var response = await _httpClient.PostAsJsonAsync(apiUrl, new
@@ -70,11 +91,17 @@ public class CoreServiceController : ControllerBase
             var accessToken = accessTokenElement.GetString();
             var refreshToken = refreshTokenElement.GetString();
 
-            return Ok(new
+            var cookieOptions = new CookieOptions
             {
-                access_token = accessToken,
-                refresh_token = refreshToken
-            });
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTimeOffset.UtcNow.AddDays(1)
+            };
+
+            Response.Cookies.Append("auth-token", accessToken, cookieOptions);
+
+            return Ok();
         }
         else
         {

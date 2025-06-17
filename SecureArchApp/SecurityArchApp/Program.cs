@@ -26,17 +26,12 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddScoped(sp =>
-{
-    var httpClient = new HttpClient { BaseAddress = new Uri("https://deine-api-url.de/") };
-    return httpClient;
-});
-builder.Services.AddBlazoredLocalStorage();
-builder.Services.AddScoped<AuthService>();
+    new HttpClient { BaseAddress = new Uri("https://localhost:7254/") });
+
 
 var app = builder.Build();
 app.UseCors("AllowBlazorClient"); // CORS-Middleware einsetzen
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
@@ -44,7 +39,6 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 

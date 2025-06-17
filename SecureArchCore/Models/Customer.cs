@@ -1,4 +1,6 @@
-﻿namespace SecurityArch.Models;
+﻿using SecureArchCore.Models;
+
+namespace SecurityArch.Models;
 
     public class Customer
     {
@@ -9,4 +11,5 @@
         public string? telefon { get; set; }
         public string? adresse { get; set; }
         public DateTime erstellt_am { get; set; }
-    }
+        public ICollection<Sensor> Sensoren { get; set; }
+}

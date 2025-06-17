@@ -31,9 +31,10 @@ public class Program
         {
             options.AddPolicy("AllowBlazorClient", policy =>
             {
-                policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+                policy.WithOrigins("https://localhost:7255").AllowAnyHeader().AllowAnyMethod().AllowCredentials(); // GANZ WICHTIG!;
             });
         });
+
         builder.Services.AddAuthentication(opt =>
         {
             opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -41,6 +42,21 @@ public class Program
         })
         .AddJwtBearer(options =>
         {
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    // Hier wird das Token aus dem Cookie gelesen
+                    var token = context.Request.Cookies["auth-token"]; // <-- Cookie-Name anpassen!
+                    Console.WriteLine("JWT Cookie: " + token);
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        context.Token = token;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
+
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = false,
@@ -52,6 +68,7 @@ public class Program
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("REDACTED_CAUSE_GITHUB"))
             };
         });
+
 
 
 
