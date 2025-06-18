@@ -1,17 +1,24 @@
+from dotenv import load_dotenv
+import os
 import paho.mqtt.client as mqtt
 import requests
 
-MQTT_BROKER = "192.168.0.54"
-MQTT_PORT = 1883
-MQTT_USERNAME = "daniel_bsa"
-MQTT_PASSWORD = "secure_bsa"
-MQTT_TOPIC = "shellies/shelly-bsa/sensor/state"  # + = Wildcard für Device ID
+#.env laden
+load_dotenv()
 
-TICKET_API_URL = "https://deine-webapp.de/api/ticket"  # <--- ANPASSEN
+MQTT_BROKER   = os.getenv("MQTT_BROKER")
+MQTT_PORT     = int(os.getenv("MQTT_PORT", 1883))
+MQTT_USERNAME = os.getenv("MQTT_USERNAME")
+MQTT_PASSWORD = os.getenv("MQTT_PASSWORD")
+
+TICKET_API_URL = os.getenv("TICKET_API_URL")
+API_TOKEN      = os.getenv("API_TOKEN")  # Optional, je nach Webapp
+
+MQTT_TOPIC = "shellies/shelly-bsa/sensor/state"
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
-        print("Verbunden mit MQTT Broker")
+        print(" Verbunden mit MQTT Broker")
         client.subscribe(MQTT_TOPIC)
     else:
         print(f" Fehler beim Verbinden: {rc}")
@@ -19,7 +26,7 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     payload = msg.payload.decode()
     topic = msg.topic
-    print(f" Nachricht empfangen - Topic: {topic} | Payload: {payload}")
+    print(f"Empfangen – Topic: {topic} | Payload: {payload}")
 
     if payload.lower() == "open":
         data = {
@@ -27,11 +34,18 @@ def on_message(client, userdata, msg):
             "description": f"Die Tür wurde geöffnet (Topic: {topic})"
         }
 
+        headers = {
+            "Content-Type": "application/json"
+        }
+
+        if API_TOKEN:
+            headers["Authorization"] = f"Bearer {API_TOKEN}"
+
         try:
-            r = requests.post(TICKET_API_URL, json=data)
+            r = requests.post(TICKET_API_URL, json=data, headers=headers)
             print(f" Ticket gesendet – Status: {r.status_code}")
         except Exception as e:
-            print(f" Fehler beim Senden des Tickets: {e}")
+            print(f" Fehler beim Senden: {e}")
 
 client = mqtt.Client()
 client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
