@@ -17,5 +17,7 @@ namespace SecureArchApp.Client.Models
         public int? kunden_id { get; set; }
 
         public DateTime created_at { get; set; } = DateTime.Now;
+
+        public List<string>? ip_addresses { get; set; }
     }
 }

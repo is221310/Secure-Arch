@@ -21,7 +21,6 @@ namespace SecureArchCore.Controllers
             return Ok(sensoren);
         }
 
-
         [HttpGet("withCustomers")]
         public async Task<IActionResult> GetAllWithCustomers()
         {
@@ -31,6 +30,7 @@ namespace SecureArchCore.Controllers
 
             return Ok(sensoren);
         }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Sensor neuerSensor)
         {
@@ -38,29 +38,14 @@ namespace SecureArchCore.Controllers
                 return BadRequest("Sensorname darf nicht leer sein.");
 
             neuerSensor.created_at = neuerSensor.created_at == default
-                 ? DateTime.UtcNow
-                 : DateTime.SpecifyKind(neuerSensor.created_at, DateTimeKind.Utc);
+                ? DateTime.UtcNow
+                : DateTime.SpecifyKind(neuerSensor.created_at, DateTimeKind.Utc);
 
             _context.Sensoren.Add(neuerSensor);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetAll), new { id = neuerSensor.sensor_id }, neuerSensor);
         }
-
-
-        [HttpDelete("{sensor_id:int}")]
-        public async Task<IActionResult> Delete(int sensor_id)
-        {
-            var sensor = await _context.Sensoren.FindAsync(sensor_id);
-            if (sensor == null)
-                return NotFound();
-
-            _context.Sensoren.Remove(sensor);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] Sensor sensorUpdate)
@@ -75,15 +60,28 @@ namespace SecureArchCore.Controllers
             if (sensor == null)
                 return NotFound("Sensor nicht gefunden.");
 
-            
             sensor.sensor_name = sensorUpdate.sensor_name;
             sensor.beschreibung = sensorUpdate.beschreibung;
+            sensor.ip_addresses = sensorUpdate.ip_addresses;
 
-            
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
+        [HttpDelete("{sensor_id:int}")]
+        public async Task<IActionResult> Delete(int sensor_id)
+        {
+            var sensor = await _context.Sensoren.FindAsync(sensor_id);
+            if (sensor == null)
+                return NotFound();
+
+            _context.Sensoren.Remove(sensor);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
         [HttpPut("{sensorId}/assign/{kundenId}")]
         public async Task<IActionResult> AssignSensorToKunde(int sensorId, int kundenId)
         {
@@ -120,5 +118,4 @@ namespace SecureArchCore.Controllers
             public int? kunden_id { get; set; }
         }
     }
-
 }

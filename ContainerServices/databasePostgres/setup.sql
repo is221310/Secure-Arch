@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS Sensoren (
     sensor_name VARCHAR(255) NOT NULL,
     beschreibung TEXT,      
     kunden_id INT,
+	ip_addresses JSONB  DEFAULT '[]',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_sensor_kunde FOREIGN KEY (kunden_id) REFERENCES Kunden(kunden_id)
 );
@@ -45,8 +46,9 @@ INSERT INTO Users (firstname, lastname, email, password, telephone, role, addres
 ('Peter', 'Müller', 'peter.mueller@example.com','$2y$10$wZgGtX8Yi6DpCMEJTBmE5e6i3CxmuToI/E5tLYIaOhj5xGBO1hNne', '015112345678', 'Mitarbeiter', 'Lindenallee 8, 20095 Hamburg', NULL);
 
 
-INSERT INTO Sensoren (sensor_name, beschreibung, kunden_id) VALUES
-('Temperatursensor A1', 'Raum 101', 1),
-('Feuchtigkeitssensor B2', 'Keller', 1),
-('Bewegungsmelder C3', 'Eingangshalle', 2),
-('Luftqualitätssensor D4', 'Büro 3.OG', 3);
+INSERT INTO Sensoren (sensor_name, beschreibung, kunden_id, ip_addresses)
+VALUES 
+('Temperatursensor A1', 'Raum 101', 1, '["192.168.0.101", "192.168.0.102"]'),
+('Feuchtigkeitssensor B2', 'Keller', 1, '["10.0.0.10", "10.0.0.11"]'),
+('Bewegungsmelder C3', 'Eingangshalle', 2, '["172.16.5.1"]'),
+('Luftqualitätssensor D4', 'Büro 3.OG', 3, '["192.168.100.10", "192.168.100.11", "192.168.100.12"]');

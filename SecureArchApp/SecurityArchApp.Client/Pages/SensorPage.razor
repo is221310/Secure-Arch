@@ -1,102 +1,100 @@
-﻿@page "/users"
+﻿@page "/sensor"
 @inject HttpClient Http
 @inject IDialogService DialogService
 
 @using SecureArchApp.Client.Models
 
 <MudPaper Class="p-4">
-    <MudText Typo="Typo.h5">Userverwaltung</MudText>
+    <MudText Typo="Typo.h5">Sensorverwaltung</MudText>
 
     <MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="OpenNeuerForm" Class="my-3">
-        Neuer User
+        Neuer Sensor
     </MudButton>
 
     @if (_formularSichtbar)
     {
         <MudPaper Class="p-4 mb-4" Elevation="2">
-            <MudText Typo="Typo.h6">@(_bearbeiteUser.id == 0 ? "Neuer User" : "User bearbeiten")</MudText>
+            <MudText Typo="Typo.h6">@(_bearbeiteSensor.sensor_id == 0 ? "Neuer Sensor" : "Sensor bearbeiten")</MudText>
 
-            <MudTextField @bind-Value="_bearbeiteUser.firstname" Label="Vorname" Required="true" />
-            <MudTextField @bind-Value="_bearbeiteUser.lastname" Label="Nachname" Required="true" />
-            <MudTextField @bind-Value="_bearbeiteUser.email" Label="E-Mail" Required="true" />
-            <MudTextField @bind-Value="_bearbeiteUser.password" Label="Passwort" InputType="InputType.Password" Required="@(_bearbeiteUser.id == 0)" />
-            <MudTextField @bind-Value="_bearbeiteUser.telephone" Label="Telefon" />
-            <MudTextField @bind-Value="_bearbeiteUser.address" Label="Adresse" />
+            <MudTextField @bind-Value="_bearbeiteSensor.sensor_name" Label="Sensorname" Required="true" />
+            <MudTextField @bind-Value="_bearbeiteSensor.beschreibung" Label="Beschreibung" />
 
-            <MudButton Color="Color.Primary" OnClick="SpeichernUser" Class="mt-3">Speichern</MudButton>
+            <MudDivider Class="my-2" />
+            <MudText Typo="Typo.subtitle2">IP-Adressen</MudText>
+
+            @foreach (var ip in _bearbeiteSensor.ip_addresses.Select((value, index) => new { value, index }))
+            {
+                <div class="d-flex align-items-center mb-2">
+                    <MudTextField T="string" @bind-Value="_bearbeiteSensor.ip_addresses[ip.index]" Label="IP-Adresse" Class="me-2" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => EntferneIp(ip.index)" />
+                </div>
+            }
+
+            <MudButton Variant="Variant.Outlined" OnClick="HinzufuegenIp">+ IP-Adresse hinzufügen</MudButton>
+
+            <MudButton Color="Color.Primary" OnClick="SpeichernSensor" Class="mt-3">Speichern</MudButton>
             <MudButton Color="Color.Secondary" OnClick="CloseForm" Class="mt-3 ml-2">Abbrechen</MudButton>
         </MudPaper>
     }
 
-    <MudTable Items="users" Dense="true" Bordered="true" Hover="true" Elevation="1">
+    <MudTable Items="sensoren" Dense="true" Bordered="true" Hover="true" Elevation="1">
         <HeaderContent>
-            <MudTh>id</MudTh>
-            <MudTh>Vorname</MudTh>
-            <MudTh>Nachname</MudTh>
-            <MudTh>E-Mail</MudTh>
-            <MudTh>Telefon</MudTh>
-            <MudTh>Rolle</MudTh>
-            <MudTh>Kunde</MudTh>
+            <MudTh>ID</MudTh>
+            <MudTh>Name</MudTh>
+            <MudTh>Beschreibung</MudTh>
+            <MudTh>IP-Adressen</MudTh>
+            <MudTh>Erstellt am</MudTh>
             <MudTh>Aktionen</MudTh>
         </HeaderContent>
-        <RowTemplate Context="user">
-            <MudTd>@user.id</MudTd>
-            <MudTd>@user.firstname</MudTd>
-            <MudTd>@user.lastname</MudTd>
-            <MudTd>@user.email</MudTd>
-            <MudTd>@user.telephone</MudTd>
-            <MudTd>@user.role</MudTd>
-            <MudTd>@(kunden.FirstOrDefault(k => k.kunden_id == user.kunden_id)?.kunden_name ?? "-")</MudTd>
+        <RowTemplate Context="sensor">
+            <MudTd>@sensor.sensor_id</MudTd>
+            <MudTd>@sensor.sensor_name</MudTd>
+            <MudTd>@sensor.beschreibung</MudTd>
             <MudTd>
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => OpenBearbeitenForm(user)" />
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteUser(user.id)" />
+                @foreach (var ip in sensor.ip_addresses)
+                {
+                    <div>@ip</div>
+                }
+            </MudTd>
+            <MudTd>@sensor.created_at.ToShortDateString()</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => OpenBearbeitenForm(sensor)" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteSensor(sensor.sensor_id)" />
             </MudTd>
         </RowTemplate>
     </MudTable>
 </MudPaper>
 
 @code {
-    private List<User> users = new();
-    private List<Kunde> kunden = new();
-
-    private User _bearbeiteUser = new();
+    private List<Sensor> sensoren = new();
+    private Sensor _bearbeiteSensor = new();
     private bool _formularSichtbar = false;
 
     protected override async Task OnInitializedAsync()
     {
-        await LadeUser();
-        await LadeKunden();
+        await LadeSensoren();
     }
 
-    private async Task LadeUser()
+    private async Task LadeSensoren()
     {
-        users = await Http.GetFromJsonAsync<List<User>>("api/user") ?? new();
-    }
-
-    private async Task LadeKunden()
-    {
-        kunden = await Http.GetFromJsonAsync<List<Kunde>>("api/kunde") ?? new();
+        sensoren = await Http.GetFromJsonAsync<List<Sensor>>("api/sensor") ?? new();
     }
 
     private void OpenNeuerForm()
     {
-        _bearbeiteUser = new User();
+        _bearbeiteSensor = new Sensor { ip_addresses = new List<string>() };
         _formularSichtbar = true;
     }
 
-    private void OpenBearbeitenForm(User user)
+    private void OpenBearbeitenForm(Sensor sensor)
     {
-        _bearbeiteUser = new User
+        _bearbeiteSensor = new Sensor
             {
-                id = user.id,
-                firstname = user.firstname,
-                lastname = user.lastname,
-                email = user.email,
-                role = user.role,
-                password = "", // Passwort leer lassen beim Bearbeiten
-                telephone = user.telephone,
-                address = user.address,
-                kunden_id = user.kunden_id
+                sensor_id = sensor.sensor_id,
+                sensor_name = sensor.sensor_name,
+                beschreibung = sensor.beschreibung,
+                ip_addresses = new List<string>(sensor.ip_addresses),
+                created_at = sensor.created_at
             };
         _formularSichtbar = true;
     }
@@ -106,48 +104,57 @@
         _formularSichtbar = false;
     }
 
-    private async Task SpeichernUser()
+    private void HinzufuegenIp()
     {
-        if (string.IsNullOrWhiteSpace(_bearbeiteUser.firstname) ||
-            string.IsNullOrWhiteSpace(_bearbeiteUser.lastname) ||
-            string.IsNullOrWhiteSpace(_bearbeiteUser.email) ||
-            string.IsNullOrWhiteSpace(_bearbeiteUser.role) ||
-            (_bearbeiteUser.id == 0 && string.IsNullOrWhiteSpace(_bearbeiteUser.password)))
+        _bearbeiteSensor.ip_addresses.Add(string.Empty);
+    }
+
+    private void EntferneIp(int index)
+    {
+        if (index >= 0 && index < _bearbeiteSensor.ip_addresses.Count)
+        {
+            _bearbeiteSensor.ip_addresses.RemoveAt(index);
+        }
+    }
+
+    private async Task SpeichernSensor()
+    {
+        if (string.IsNullOrWhiteSpace(_bearbeiteSensor.sensor_name))
             return;
 
         HttpResponseMessage response;
 
-        if (_bearbeiteUser.id == 0)
+        if (_bearbeiteSensor.sensor_id == 0)
         {
-            response = await Http.PostAsJsonAsync("api/user", _bearbeiteUser);
+            response = await Http.PostAsJsonAsync("api/sensor", _bearbeiteSensor);
         }
         else
         {
-            response = await Http.PutAsJsonAsync($"api/user/{_bearbeiteUser.id}", _bearbeiteUser);
+            response = await Http.PutAsJsonAsync($"api/sensor/{_bearbeiteSensor.sensor_id}", _bearbeiteSensor);
         }
 
         if (response.IsSuccessStatusCode)
         {
             _formularSichtbar = false;
-            await LadeUser();
+            await LadeSensoren();
         }
         else
         {
-            // Fehlerbehandlung hier ergänzen
+            // Fehler anzeigen (optional)
         }
     }
 
-    private async Task DeleteUser(int userId)
+    private async Task DeleteSensor(int sensorId)
     {
         bool? confirmed = await DialogService.ShowMessageBox(
             "Löschen bestätigen",
-            "Diesen User wirklich löschen?",
+            "Diesen Sensor wirklich löschen?",
             yesText: "Ja", cancelText: "Nein");
 
         if (confirmed == true)
         {
-            await Http.DeleteAsync($"api/user/{userId}");
-            await LadeUser();
+            await Http.DeleteAsync($"api/sensor/{sensorId}");
+            await LadeSensoren();
         }
     }
 }

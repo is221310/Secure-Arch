@@ -40,4 +40,6 @@ public class Sensor
     public int? kunden_id { get; set; }
     [JsonIgnore]
     public Kunde? Kunde { get; set; }
+
+    public List<string> ip_addresses { get; set; } = new();
 }

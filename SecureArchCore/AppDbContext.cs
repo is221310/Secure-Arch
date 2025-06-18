@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 public class AppDbContext : DbContext
 {
@@ -39,7 +40,7 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        modelBuilder.Entity<Sensor>(entity =>
+        modelBuilder.Entity<Sensor>(static entity =>
         {
             entity.ToTable("sensoren", "securearch");
             entity.HasKey(e => e.sensor_id);
@@ -50,6 +51,12 @@ public class AppDbContext : DbContext
                 .WithMany(k => k.Sensoren)
                 .HasForeignKey(s => s.kunden_id)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(e => e.ip_addresses)
+       .HasColumnType("jsonb")
+       .HasConversion(
+           v => JsonSerializer.Serialize(v, default(JsonSerializerOptions)),
+           v => JsonSerializer.Deserialize<List<string>>(v, default(JsonSerializerOptions))!);
         });
     }
 }
