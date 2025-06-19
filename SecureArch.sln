@@ -20,6 +20,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecureArchCore", "SecureArc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSecureArchCore", "TestSecureArchCore\TestSecureArchCore.csproj", "{457BC170-919E-4C8F-A599-BA62615681E7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSecureArchApp", "TestSecureArchApp\TestSecureArchApp.csproj", "{B8A2A401-8827-4459-91D1-B02854A8294E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSecureArchAppClient", "TestSecureArchAppClient\TestSecureArchAppClient.csproj", "{CCA5CFAD-3170-4539-91EA-01B978F77E98}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSRMAgent", "TestSRMAgent\TestSRMAgent.csproj", "{F17AD378-3198-4423-A88B-78E168BE4AC2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,6 +56,18 @@ Global
 		{457BC170-919E-4C8F-A599-BA62615681E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{457BC170-919E-4C8F-A599-BA62615681E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{457BC170-919E-4C8F-A599-BA62615681E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8A2A401-8827-4459-91D1-B02854A8294E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8A2A401-8827-4459-91D1-B02854A8294E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8A2A401-8827-4459-91D1-B02854A8294E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8A2A401-8827-4459-91D1-B02854A8294E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CCA5CFAD-3170-4539-91EA-01B978F77E98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCA5CFAD-3170-4539-91EA-01B978F77E98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCA5CFAD-3170-4539-91EA-01B978F77E98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCA5CFAD-3170-4539-91EA-01B978F77E98}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F17AD378-3198-4423-A88B-78E168BE4AC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F17AD378-3198-4423-A88B-78E168BE4AC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F17AD378-3198-4423-A88B-78E168BE4AC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F17AD378-3198-4423-A88B-78E168BE4AC2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

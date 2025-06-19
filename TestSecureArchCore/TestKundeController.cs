@@ -1,10 +1,6 @@
-using Xunit;
 using SecureArchCore.Controllers;
-using SecureArchCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace TestSecureArchCore
 {
