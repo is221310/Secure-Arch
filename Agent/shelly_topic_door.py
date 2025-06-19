@@ -1,132 +1,173 @@
-from dotenv import load_dotenv
-import os, time, threading, json, sys
-import requests, urllib3
-from pythonping import ping
+import os
+import time
+import json
+import threading
+import requests
+from ping3 import ping
 import paho.mqtt.client as mqtt
-from datetime import datetime
+from dotenv import load_dotenv
 
-# Konfiguration laden
+# Konfiguration
 load_dotenv()
+BASE_URL = "https://1.1.1.1:5555"
+SESSION = requests.Session()
+SESSION.verify = False  # Nur für Selbstsignierte Zertifikate
 
-# MQTT
-MQTT_BROKER   = os.getenv("MQTT_BROKER")
-MQTT_PORT     = int(os.getenv("MQTT_PORT", 1883))
-MQTT_USERNAME = os.getenv("MQTT_USERNAME")
-MQTT_PASSWORD = os.getenv("MQTT_PASSWORD")
+# Globale Variablen
+ip_list = []
+last_door_state = None
+DEVICE_ID = "shelly-bsa"  # Dein Shelly-Gerätename
 
-# Web-API
-BASE_URL          = os.getenv("BASE_URL").rstrip("/")
-LOGIN_EP          = os.getenv("LOGIN_ENDPOINT", "/CoreService/login")
-CONFIG_EP         = os.getenv("CONFIG_ENDPOINT", "/DataService/getConfig")
-IPRESULT_EP       = os.getenv("IPRESULT_ENDPOINT", "/DataService/ipresults")
-TEMP_EP           = os.getenv("TEMP_ENDPOINT", "/DataService/temperatur")
-DOOR_EP           = os.getenv("DOOR_ENDPOINT", "/DataService/door")
-API_USER          = os.getenv("API_USER")
-API_PASS          = os.getenv("API_PASS")
-VERIFY_SSL        = os.getenv("VERIFY_SSL", "true").lower() == "true"
-
-PING_INTERVAL     = int(os.getenv("PING_INTERVAL", 5))
-
-if not VERIFY_SSL:
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-# HTTP-Session mit Cookie-Handling
-session = requests.Session()
-session.verify = VERIFY_SSL
-
-def api_login():
-    url = f"{BASE_URL}{LOGIN_EP}"
-    payload = {"username": API_USER, "password": API_PASS}
-    r = session.post(url, json=payload, timeout=10)
-    if r.status_code != 200:
-        print(f"Login fehlgeschlagen ({r.status_code}) – Script wird beendet")
-        sys.exit(1)
-    print("Login erfolgreich – Cookie erhalten")
-
-def get_ip_list():
-    url = f"{BASE_URL}{CONFIG_EP}/{API_USER}"
-    r = session.get(url, timeout=10)
-    if r.status_code != 200:
-        print(f"Konnte IP-Liste nicht abrufen ({r.status_code})")
-        return []
+# Authentifizierung und Konfiguration
+def authenticate():
     try:
-        ip_list = r.json()
-        print(f"IP-Liste geladen: {ip_list}")
-        return ip_list
+        response = SESSION.post(
+            f"{BASE_URL}/CoreService/login",
+            json={
+                "username": os.getenv("WEBAPP_USER"),
+                "password": os.getenv("WEBAPP_PASSWORD")
+            }
+        )
+        response.raise_for_status()
+        print("Authentifizierung erfolgreich")
+        return True
     except Exception as e:
-        print(f"Fehler beim Parsen der IP-Liste: {e}")
-        return []
+        print(f"Fehler bei Authentifizierung: {str(e)}")
+        return False
 
-def ping_loop(ip_list):
-    while True:
-        results = {}
-        for ip in ip_list:
-            try:
-                reply = ping(ip, count=1, timeout=1, verbose=False)
-                reachable = reply.success()
-            except Exception:
-                reachable = False
-            results[ip] = "true" if reachable else "false"
+def fetch_config():
+    global ip_list
+    try:
+        response = SESSION.get(
+            f"{BASE_URL}/DataService/getConfig/{os.getenv('WEBAPP_USER')}"
+        )
+        response.raise_for_status()
+        ip_list = response.json()
+        print(f"IP-Liste abgerufen: {ip_list}")
+        return True
+    except Exception as e:
+        print(f"Fehler beim Abrufen der Konfiguration: {str(e)}")
+        return False
+
+# Ping und Datenübermittlung
+def ping_ips():
+    results = {}
+    for ip in ip_list:
         try:
-            r = session.post(f"{BASE_URL}{IPRESULT_EP}", json=results, timeout=10)
-            print(f"Ping-Ergebnisse gesendet ({r.status_code}): {results}")
+            response = ping(ip, timeout=1)
+            results[ip] = "true" if response is not None else "false"
+        except:
+            results[ip] = "false"
+    return results
+
+def send_ping_results():
+    while True:
+        try:
+            if ip_list:  # Nur senden wenn IP-Liste vorhanden
+                results = ping_ips()
+                response = SESSION.post(
+                    f"{BASE_URL}/DataService/ipresults",
+                    json=results
+                )
+                response.raise_for_status()
+                print(f"Ping-Ergebnisse gesendet: {results}")
+            else:
+                print("Keine IPs zum Pingen konfiguriert")
         except Exception as e:
-            print(f"Fehler beim Senden der Ping-Ergebnisse: {e}")
-        time.sleep(PING_INTERVAL)
+            print(f"Fehler beim Senden der Ping-Ergebnisse: {str(e)}")
+        time.sleep(5)
 
-# MQTT
-TOPIC_DOOR = "shellies/shellydw2-+/sensor/state"
-TOPIC_TEMP = "shellies/shellydw2-+/sensor/temperature"
-
+# MQTT-Handler für Shelly
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
-        client.subscribe([(TOPIC_DOOR, 0), (TOPIC_TEMP, 0)])
-        print("MQTT verbunden und Topics abonniert")
+        print("Verbunden mit MQTT Broker")
+        # Topics für shelly-bsa
+        client.subscribe([
+            (f"shellies/{DEVICE_ID}/sensor/state", 0),         # Türstatus
+            (f"shellies/{DEVICE_ID}/sensor/temperature", 0),   # Temperatur
+            (f"shellies/{DEVICE_ID}/online", 0)                # Online-Status
+        ])
     else:
-        print(f"MQTT-Verbindungsfehler: {rc}")
+        print(f"MQTT-Verbindungsfehler: Code {rc}")
 
 def on_message(client, userdata, msg):
-    payload = msg.payload.decode().strip()
-    topic   = msg.topic
+    global last_door_state
+    
+    try:
+        topic = msg.topic
+        payload = msg.payload.decode()
+        print(f"MQTT-Nachricht [{topic}]: {payload}")
+        
+        # Türstatus
+        if topic.endswith("/sensor/state"):
+            if payload == "open" and last_door_state != "open":
+                try:
+                    response = SESSION.post(
+                        f"{BASE_URL}/DataService/door",
+                        json={"door_opened": "true"}
+                    )
+                    response.raise_for_status()
+                    print("Türöffnung gemeldet")
+                except Exception as e:
+                    print(f"Fehler beim Senden des Türstatus: {str(e)}")
+            last_door_state = payload
+        
+        # Temperatur
+        elif topic.endswith("/sensor/temperature"):
+            try:
+                response = SESSION.post(
+                    f"{BASE_URL}/DataService/temperatur",
+                    json={"temp": payload}
+                )
+                response.raise_for_status()
+                print(f"Temperatur gemeldet: {payload}°C")
+            except Exception as e:
+                print(f"Fehler beim Senden der Temperatur: {str(e)}")
+        
+        # Online-Status
+        elif topic.endswith("/online"):
+            print(f"Shelly Online-Status: {'Verbunden' if payload == 'true' else 'Getrennt'}")
+            
+    except Exception as e:
+        print(f"Verarbeitungsfehler: {str(e)}")
 
-    if topic.endswith("/sensor/state") and payload.lower() == "open":
-        url = f"{BASE_URL}{DOOR_EP}"
-        data = {"door_opened": "true", "timestamp": datetime.utcnow().isoformat()}
-        try:
-            r = session.post(url, json=data, timeout=10)
-            print(f"Tür geöffnet gemeldet ({r.status_code})")
-        except Exception as e:
-            print(f"Fehler beim Tür-Event: {e}")
-
-    elif topic.endswith("/sensor/temperature"):
-        try:
-            temp_val = float(payload)
-        except ValueError:
-            print(f"Ungültiger Temperaturwert: {payload}")
-            return
-        url = f"{BASE_URL}{TEMP_EP}"
-        data = {"temp": f"{temp_val}"}
-        try:
-            r = session.post(url, json=data, timeout=10)
-            print(f"Temperatur {temp_val} °C gesendet ({r.status_code})")
-        except Exception as e:
-            print(f"Fehler beim Senden der Temperatur: {e}")
-
+# Hauptfunktion
 def main():
-    api_login()
-    ip_list = get_ip_list()
-    if not ip_list:
-        print("Keine IPs erhalten – Script wird beendet")
-        return
-
-    threading.Thread(target=ping_loop, args=(ip_list,), daemon=True).start()
-
+    # Initiale Authentifizierung
+    if not authenticate():
+        print("Versuche erneut in 10 Sekunden...")
+        time.sleep(10)
+        authenticate()
+    
+    # Konfiguration abrufen
+    if not fetch_config():
+        print("Versuche erneut in 10 Sekunden...")
+        time.sleep(10)
+        fetch_config()
+    
+    # Starte Ping-Service im Hintergrund
+    threading.Thread(target=send_ping_results, daemon=True).start()
+    print("Ping-Service gestartet")
+    
+    # MQTT-Client konfigurieren
     client = mqtt.Client()
-    client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
+    client.username_pw_set(
+        os.getenv("MQTT_USER"),
+        os.getenv("MQTT_PASSWORD")
+    )
     client.on_connect = on_connect
     client.on_message = on_message
-    client.connect(MQTT_BROKER, MQTT_PORT, 60)
-    client.loop_forever()
+    
+    try:
+        client.connect(os.getenv("MQTT_BROKER"), 1883, 60)
+        print("Starte MQTT-Hauptloop")
+        client.loop_forever()
+    except Exception as e:
+        print(f"Schwerer MQTT-Fehler: {str(e)}")
+        print("Neustart in 30 Sekunden...")
+        time.sleep(30)
+        main()  # Automatischer Neustart
 
 if __name__ == "__main__":
+    print("Agent-Service gestartet")
     main()
