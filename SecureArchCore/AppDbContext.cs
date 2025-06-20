@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System.Net;
 using System.Text.Json;
 
 public class AppDbContext : DbContext
@@ -11,6 +13,9 @@ public class AppDbContext : DbContext
     public DbSet<Kunde> Kunden { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Sensor> Sensoren { get; set; }
+
+    public DbSet<IpResult> IpResults { get; set; }
+    public DbSet<Temperatur> Temperaturen { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -53,10 +58,38 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.Property(e => e.ip_addresses)
-       .HasColumnType("jsonb")
-       .HasConversion(
+            .HasColumnType("jsonb")
+            .HasConversion(
            v => JsonSerializer.Serialize(v, default(JsonSerializerOptions)),
            v => JsonSerializer.Deserialize<List<string>>(v, default(JsonSerializerOptions))!);
         });
+
+        modelBuilder.Entity<IpResult>(entity =>
+        {
+            entity.ToTable("ip_results", "securearch");
+            entity.HasKey(e => e.id);
+            entity.Property(e => e.ip_address).IsRequired();
+            entity.Property(e => e.status).IsRequired();
+            entity.Property(e => e.timestamp).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(e => e.Sensor)
+                  .WithMany(s => s.IpResults)
+                  .HasForeignKey(e => e.sensor_id)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+
+        });
+
+        modelBuilder.Entity<IpResult>()
+        .ToTable("ip_results")
+        .HasKey(i => i.id);
+
+
+        modelBuilder.Entity<Temperatur>()
+            .ToTable("temperatur")
+            .HasOne(t => t.Sensor)
+            .WithMany(s => s.Temperaturen)
+            .HasForeignKey(t => t.sensor_id);
+
     }
 }

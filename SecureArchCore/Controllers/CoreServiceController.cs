@@ -39,7 +39,49 @@ public class CoreServiceController : ControllerBase
         return Ok(kunden);
     }
 
-    
+    [HttpGet("getrole")]
+    [Authorize]
+    public IActionResult GetRole()
+    {
+     
+
+        var roleClaim = User.Claims.FirstOrDefault(c =>
+            c.Type == "role" ||
+            c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role");
+
+        if (roleClaim == null)
+            return NotFound("Role claim not found.");
+
+        return Ok(new { Role = roleClaim.Value });
+    }
+
+
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<IActionResult> GetCurrentUserInfo()
+    {
+        var username = User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+        if (string.IsNullOrEmpty(username))
+            return Unauthorized("Kein Benutzername im Token.");
+
+        var user = await _context.Users
+            .Include(u => u.Kunde)
+            .FirstOrDefaultAsync(u => u.email == username);
+
+        if (user == null)
+            return NotFound("Benutzer nicht gefunden.");
+
+        return Ok(new
+        {
+            Username = user.email,
+            Kunde = new
+            {
+                user.Kunde.kunden_id,
+                user.Kunde.kunden_name
+            }
+        });
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetKunde(int id)
     {

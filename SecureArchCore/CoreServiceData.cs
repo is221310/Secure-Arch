@@ -1,4 +1,7 @@
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using System.Net;
 
 public class Kunde
 {
@@ -42,4 +45,35 @@ public class Sensor
     public Kunde? Kunde { get; set; }
 
     public List<string> ip_addresses { get; set; } = new();
+    public List<Temperatur> Temperaturen { get; set; } = new();
+    public ICollection<IpResult> IpResults { get; set; } = new List<IpResult>();
+}
+
+public class IpResult
+{
+    public int id { get; set; }
+
+    public int sensor_id { get; set; }
+    public string ip_address { get; set; } = string.Empty; // als string speichern
+
+    public bool status { get; set; }
+    public DateTime timestamp { get; set; }
+    [JsonIgnore] 
+    public Sensor Sensor { get; set; } = null!;
+}
+
+public class Temperatur
+{
+    [Key]
+    public int id { get; set; }
+
+  
+    public int sensor_id { get; set; }
+
+    public double temperatur { get; set; }
+
+    public DateTime timestamp { get; set; } = DateTime.UtcNow;
+    [JsonIgnore] 
+    [ForeignKey("sensor_id")]
+    public virtual Sensor Sensor { get; set; } = null!;
 }

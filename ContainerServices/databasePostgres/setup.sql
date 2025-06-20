@@ -32,6 +32,29 @@ CREATE TABLE IF NOT EXISTS Sensoren (
 );
 
 
+CREATE TABLE securearch.ip_results (
+    id SERIAL PRIMARY KEY,
+    sensor_id INTEGER NOT NULL,
+    ip_address TEXT NOT NULL,
+    status BOOLEAN NOT NULL,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_ipresults_sensor FOREIGN KEY (sensor_id)
+        REFERENCES securearch.sensoren(sensor_id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE securearch.temperatur (
+    id SERIAL PRIMARY KEY,
+    sensor_id INTEGER NOT NULL,
+    temperatur DOUBLE PRECISION NOT NULL,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_temperatur_sensor FOREIGN KEY (sensor_id)
+        REFERENCES securearch.sensoren(sensor_id)
+        ON DELETE CASCADE
+);
+
 INSERT INTO Kunden (kunden_name) VALUES
 ('Musterkunde GmbH'),
 ('Beispiel AG'),
@@ -48,7 +71,18 @@ INSERT INTO Users (firstname, lastname, email, password, telephone, role, addres
 
 INSERT INTO Sensoren (sensor_name, beschreibung, kunden_id, ip_addresses)
 VALUES 
-('Temperatursensor A1', 'Raum 101', 1, '["192.168.0.101", "192.168.0.102"]'),
-('Feuchtigkeitssensor B2', 'Keller', 1, '["10.0.0.10", "10.0.0.11"]'),
-('Bewegungsmelder C3', 'Eingangshalle', 2, '["172.16.5.1"]'),
-('Luftqualitätssensor D4', 'Büro 3.OG', 3, '["192.168.100.10", "192.168.100.11", "192.168.100.12"]');
+('sensor1', 'Raum 101', 1, '["192.168.0.101", "192.168.0.102"]'),
+('sensor2 B2', 'Raum 102', 1, '["10.0.0.10", "10.0.0.11"]'),
+('sensor3', 'Raum 103', 2, '["172.16.5.1"]'),
+('sensor4', 'Raum 104', 3, '["192.168.100.10", "192.168.100.11", "192.168.100.12"]');
+
+INSERT INTO Temperatur ("SensorId", "Wert")
+VALUES
+(1, 21.7),
+(1, 22.1),
+(2, 19.3);
+
+INSERT INTO ip_results (sensor_id, ip_address, reachable, timestamp) VALUES
+(1, '192.168.0.101', true, NOW()),
+(1, '192.168.0.102', false, NOW() - INTERVAL '1 hour'),
+(2, '10.0.0.5', true, NOW() - INTERVAL '30 minutes');

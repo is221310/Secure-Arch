@@ -66,7 +66,7 @@ public class Program
                 ValidateIssuerSigningKey = false,
                 ValidIssuer = "https://www.derweinberger.at",
                 ValidAudience = "https://www.derweinberger.at",
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("REDACTED_CAUSE_GITHUB"))
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("REDACTED_CAUSE_GITHUB")
             };
         });
 
