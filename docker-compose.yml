@@ -1,0 +1,118 @@
+version: '3.9'
+
+services:
+  redis:
+    build: /SRMAuth/redis/
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      auth_network:
+        ipv4_address: 172.20.0.10
+
+  auth_app:
+    build:
+      context: /SRMAuth/
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - postgres_app
+    restart: unless-stopped
+    networks:
+      auth_network:
+        ipv4_address: 172.20.0.20
+      database_network:
+        ipv4_address: 172.21.0.20
+
+  postgres_app:
+    build: /ContainerServices/databasePostgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      database_network:
+        ipv4_address: 172.21.0.10
+
+  web_app:
+    build:
+      context: /SRMWeb/
+      dockerfile: Dockerfile
+    ports:
+      - "0.0.0.0:8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - auth_app
+    restart: unless-stopped
+    networks:
+      web_network:
+        ipv4_address: 172.22.0.22
+      core_network:
+        ipv4_address: 172.50.0.22
+  
+  core_app:
+    build:
+      context: /SRMCore/
+      dockerfile: Dockerfile
+    ports:
+      - "0.0.0.0:5000:5000"
+    env_file:
+      - .env
+    depends_on:
+      - auth_app
+    restart: unless-stopped
+    networks:
+      core_network:
+        ipv4_address: 172.50.0.50
+      database_network:
+        ipv4_address: 172.21.0.50
+      auth_network:
+        ipv4_address: 172.20.0.50
+      ticket_network:
+        ipv4_address: 172.23.0.200
+
+volumes:
+  redis_data:
+  postgres_data:
+  
+networks:
+  auth_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+  core_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.50.0.0/24
+  database_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+  web_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.22.0.0/24
+  ticket_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/24
+    name: secure-arch_ticket_network
