@@ -1,0 +1,104 @@
+﻿@page "/dashboard"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageTitle>Dashboard</PageTitle>
+
+@if (_loading)
+{
+    <MudText>Loading data...</MudText>
+}
+else if (_errorMessage is not null)
+{
+    <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
+}
+else
+{
+    <MudText Typo="Typo.h4" GutterBottom="true">IP Results</MudText>
+
+    <MudTable Items="_ipResults" Hover="true" Bordered="true" Dense="true">
+        <HeaderContent>
+            <MudTh>Sensor ID</MudTh>
+            <MudTh>IP Address</MudTh>
+            <MudTh>Result</MudTh>
+            <MudTh>Timestamp (UTC)</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.sensor_id</MudTd>
+            <MudTd>@context.ip_address</MudTd>
+            <MudTd>@(context.result ? "True" : "False")</MudTd>
+            <MudTd>@context.timestamp.ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
+        </RowTemplate>
+    </MudTable>
+
+    <MudText Typo="Typo.h4" GutterBottom="true" Class="mt-6">Temperaturen</MudText>
+
+    <MudTable Items="_temperaturen" Hover="true" Bordered="true" Dense="true">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>Sensor ID</MudTh>
+            <MudTh>Temperatur</MudTh>
+            <MudTh>Timestamp (UTC)</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.id</MudTd>
+            <MudTd>@context.sensor_id</MudTd>
+            <MudTd>@context.temperatur</MudTd>
+            <MudTd>@context.timestamp.ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private bool _loading = true;
+    private string? _errorMessage;
+
+    private List<IpResultDto> _ipResults = new();
+    private List<TemperaturDto> _temperaturen = new();
+
+    protected override void OnInitialized()
+    {
+        _loading = true;
+        _ = LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+               _ipResults = await Http.GetFromJsonAsync<List<IpResultDto>>("/api/DataService/ipresults/by-user") ?? new();
+            _temperaturen = await Http.GetFromJsonAsync<List<TemperaturDto>>("/api/DataService/temperaturen/by-user") ?? new();
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                NavigationManager.NavigateTo("/login", true);
+                return;
+            }
+            _errorMessage = "Fehler beim Laden der Daten.";
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged(); 
+        }
+    }
+
+    public class IpResultDto
+    {
+        public int id { get; set; }
+        public int sensor_id { get; set; }
+        public string ip_address { get; set; } = "";
+        public bool result { get; set; }
+        public DateTime timestamp { get; set; }
+    }
+
+    public class TemperaturDto
+    {
+        public int id { get; set; }
+        public int sensor_id { get; set; }
+        public double temperatur { get; set; }
+        public DateTime timestamp { get; set; }
+    }
+}

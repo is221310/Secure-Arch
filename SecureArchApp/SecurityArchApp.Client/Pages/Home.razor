@@ -1,6 +1,81 @@
 ﻿@page "/"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@using System.Net.Http.Json
 
 <PageTitle>Home</PageTitle>
 
-<MudText Typo="Typo.h3" GutterBottom="true">Hello, world!</MudText>
-<MudText Class="mb-8">Willkommen zu SecureArch </MudText>
+@if (_loading)
+{
+    <MudText>Loading...</MudText>
+}
+else if (_username is null)
+{
+    <MudText>Benutzer nicht gefunden. Bitte <a href="/login">einloggen</a>.</MudText>
+}
+else
+{
+    <MudText Typo="Typo.h3" GutterBottom="true">Hallo, @_username!</MudText>
+    <MudText Class="mb-8">Willkommen zu SecureArch</MudText>
+
+    <MudButton Color="Color.Error" OnClick="Logout">Logout</MudButton>
+}
+
+@code {
+    private string? _username;
+    private bool _loading = true;
+    private bool _hasLoaded = false; // Flag für einmalige Ausführung
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_hasLoaded)
+        {
+            _hasLoaded = true; // Sicherstellen, dass der Code nur einmal läuft
+            await LoadUserInfo();
+            StateHasChanged(); // UI aktualisieren
+        }
+    }
+
+    private async Task LoadUserInfo()
+    {
+        try
+        {
+            var userInfo = await Http.GetFromJsonAsync<UserInfo>("CoreService/me");
+            if (userInfo == null)
+            {
+                NavigationManager.NavigateTo("/login", true);
+                return;
+            }
+            _username = userInfo.Username;
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                NavigationManager.NavigateTo("/login", true);
+                return;
+            }
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void Logout()
+    {
+        NavigationManager.NavigateTo("/logout", true);
+    }
+
+    public class UserInfo
+    {
+        public string Username { get; set; } = "";
+        public KundeDto Kunde { get; set; } = new();
+    }
+
+    public class KundeDto
+    {
+        public int kunden_id { get; set; }
+        public string kunden_name { get; set; } = "";
+    }
+}
