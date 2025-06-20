@@ -18,6 +18,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecureArchApp.Client", "Sec
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecureArchCore", "SecureArchCore\SecureArchCore.csproj", "{CFEE171F-B6D3-86FA-4EDB-E3B7F47C1728}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSecureArchApp", "TestSecureArchApp\TestSecureArchApp.csproj", "{04321E0D-5F30-831D-C4BD-65B8D5CE59B9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSecureArchAppClient", "TestSecureArchAppClient\TestSecureArchAppClient.csproj", "{B4138379-F5C1-234D-600C-051F0845B1FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSecureArchCore", "TestSecureArchCore\TestSecureArchCore.csproj", "{CA74771D-67AA-3A39-23AD-5897707AA74A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +50,18 @@ Global
 		{CFEE171F-B6D3-86FA-4EDB-E3B7F47C1728}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CFEE171F-B6D3-86FA-4EDB-E3B7F47C1728}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CFEE171F-B6D3-86FA-4EDB-E3B7F47C1728}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04321E0D-5F30-831D-C4BD-65B8D5CE59B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04321E0D-5F30-831D-C4BD-65B8D5CE59B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04321E0D-5F30-831D-C4BD-65B8D5CE59B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04321E0D-5F30-831D-C4BD-65B8D5CE59B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4138379-F5C1-234D-600C-051F0845B1FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4138379-F5C1-234D-600C-051F0845B1FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4138379-F5C1-234D-600C-051F0845B1FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4138379-F5C1-234D-600C-051F0845B1FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA74771D-67AA-3A39-23AD-5897707AA74A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA74771D-67AA-3A39-23AD-5897707AA74A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA74771D-67AA-3A39-23AD-5897707AA74A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA74771D-67AA-3A39-23AD-5897707AA74A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

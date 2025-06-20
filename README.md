@@ -46,7 +46,7 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
 - **Agent → Core Kommunikation** über **HTTPS REST-API**
 - **Automatische Ticket-Erstellung** bei sicherheitsrelevanten Vorfällen
 - **Mehrmandantenfähig**
-- **CI/CD Pipeline (GitHub Actions)**
+- **CI Pipeline (GitHub Actions, Secrets, GitHub Container Registry)**
 
 ---
 
@@ -116,7 +116,7 @@ Zugriff:
 - Frontend: http://localhost:5000
 - API Core: http://localhost:5001/api
 - Token-Service: http://localhost:5002
-- MongoDB, PostgreSQL, etc. auf eigenen Docker-Netzwerken
+- PostgreSQL, etc. auf eigenen Docker-Netzwerken
 
 ### Agent (z. B. auf Raspberry Pi)
 
@@ -125,6 +125,15 @@ cd agent
 dotnet run
 # Oder als Service einrichten
 ```
+
+---
+
+## Unit Tests
+
+- ? 4 test classes were created to test parts of the components SecureArchApp, SecureArchAppClient, SecureArchCore and SRMAuth
+- the tests cover c# and python code
+- the backend SecureArchCore has the highest test coverage
+- ? integration of unit tests into the CI pipeline
 
 ---
 

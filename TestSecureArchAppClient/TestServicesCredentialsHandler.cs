@@ -1,3 +1,4 @@
+// this class was created following this tutorial https://www.youtube.com/watch?v=aumcaBkprsA&t=61s and with the help of KI
 using System.Net;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;

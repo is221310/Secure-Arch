@@ -1,4 +1,5 @@
-﻿using SecureArchCore.Controllers;
+﻿// this class was created following this tutorial https://www.youtube.com/watch?v=aumcaBkprsA&t=61s and with the help of KI
+using SecureArchCore.Controllers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 
