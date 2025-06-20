@@ -20,7 +20,7 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
     - [Voraussetzungen](#voraussetzungen)
     - [Backend \& Frontend (lokal)](#backend--frontend-lokal)
     - [Agent (z. B. auf Raspberry Pi)](#agent-zb-auf-raspberry-pi)
-  - [Unit Tests](#-unit-tests)
+  - [Unit Tests](#unit-tests)
   - [👥 Teammitglieder](#-teammitglieder)
   - [📄 Lizenz](#-lizenz)
   - [📎 Anhang](#-anhang)
