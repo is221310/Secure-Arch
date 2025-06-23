@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SecureArchCore.Models;
 
 namespace SecureArchCore.Controllers
 {
@@ -74,28 +75,37 @@ namespace SecureArchCore.Controllers
             return Ok(temperaturen);
         }
 
-        public class TemperaturCreateDto
+        public class TemperaturCreateByNameDto
         {
-            public int sensor_id { get; set; }
+            public string sensor_name { get; set; } = string.Empty;
             public double temperatur { get; set; }
             public DateTime timestamp { get; set; } = DateTime.UtcNow;
         }
 
         [HttpPost("temperatur")]
-        public async Task<IActionResult> PostTemperatur([FromBody] TemperaturCreateDto dto)
+        public async Task<IActionResult> PostTemperaturByName([FromBody] TemperaturCreateByNameDto dto)
         {
+            var sensor = await _context.Sensoren
+                .FirstOrDefaultAsync(s => s.sensor_name == dto.sensor_name);
+
+            if (sensor == null)
+            {
+                return NotFound($"Sensor mit Name '{dto.sensor_name}' nicht gefunden.");
+            }
+
             var temperatur = new Temperatur
             {
-                sensor_id = dto.sensor_id,
+                sensor_id = sensor.sensor_id,
                 temperatur = dto.temperatur,
                 timestamp = dto.timestamp
             };
 
             _context.Temperaturen.Add(temperatur);
             await _context.SaveChangesAsync();
+
             return Ok(temperatur);
         }
-     
+
 
         [HttpGet("ipresults")]
             public async Task<IActionResult> GetAllIpResults()
@@ -145,20 +155,29 @@ namespace SecureArchCore.Controllers
 
             return Ok(ipResults);
         }
-
-
-        [HttpPost("ipresults")]
-        public async Task<IActionResult> CreateIpResult([FromBody] IpResultCreateDto input)
+        public class IpResultCreateByNameDto
         {
-            if (!_context.Sensoren.Any(s => s.sensor_id == input.sensor_id))
-                return BadRequest("Sensor existiert nicht.");
+            public string sensor_name { get; set; } = string.Empty;
+            public string ip_address { get; set; } = string.Empty;
+            public bool status { get; set; }
+            public DateTime timestamp { get; set; } = DateTime.UtcNow;
+        }
+
+        [HttpPost("ipresults/")]
+        public async Task<IActionResult> PostIpResultBySensorName([FromBody] IpResultCreateByNameDto dto)
+        {
+            var sensor = await _context.Sensoren
+                .FirstOrDefaultAsync(s => s.sensor_name == dto.sensor_name);
+
+            if (sensor == null)
+                return NotFound($"Sensor mit Name '{dto.sensor_name}' nicht gefunden.");
 
             var ipResult = new IpResult
             {
-                sensor_id = input.sensor_id,
-                ip_address = input.ip_address,
-                status = input.status,
-                timestamp = DateTime.UtcNow
+                sensor_id = sensor.sensor_id,
+                ip_address = dto.ip_address,
+                status = dto.status,
+                timestamp = dto.timestamp
             };
 
             _context.IpResults.Add(ipResult);

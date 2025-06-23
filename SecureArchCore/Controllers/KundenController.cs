@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SecureArchCore.Models;
+
 
 namespace SecureArchCore.Controllers
 {
