@@ -13,7 +13,14 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        DotNetEnv.Env.Load();
+        try
+        {
+            DotNetEnv.Env.Load();
+        }
+        catch (FileNotFoundException)
+        {
+            //in container environment, .env file is not needed 
+        }
         var builder = WebApplication.CreateBuilder(args);
 
         // === Umgebungsvariablen laden ===
