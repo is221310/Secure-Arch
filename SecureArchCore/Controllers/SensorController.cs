@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SecureArchCore.Models;
+
 
 namespace SecureArchCore.Controllers
 {
@@ -31,20 +34,60 @@ namespace SecureArchCore.Controllers
             return Ok(sensoren);
         }
 
+        public static class PasswordHasher
+        {
+            public static string Hash(string input) => BCrypt.Net.BCrypt.HashPassword(input);
+        }
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Sensor neuerSensor)
         {
             if (string.IsNullOrWhiteSpace(neuerSensor.sensor_name))
                 return BadRequest("Sensorname darf nicht leer sein.");
 
-            neuerSensor.created_at = neuerSensor.created_at == default
-                ? DateTime.UtcNow
-                : DateTime.SpecifyKind(neuerSensor.created_at, DateTimeKind.Utc);
+            // Zeitstempel setzen, falls leer
+            neuerSensor.created_at = DateTime.UtcNow;
 
+            // Secret nur hashen, wenn vorhanden
+            if (!string.IsNullOrWhiteSpace(neuerSensor.secret_key))
+            {
+                neuerSensor.secret_key = PasswordHasher.Hash(neuerSensor.secret_key);
+            }
+
+            // IP-Liste initialisieren, falls null
+            neuerSensor.ip_addresses ??= new List<string>();
+
+            // In Datenbank speichern
             _context.Sensoren.Add(neuerSensor);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetAll), new { id = neuerSensor.sensor_id }, neuerSensor);
+            return Ok(new
+            {
+                message = "Sensor erfolgreich gespeichert.",
+                sensor_id = neuerSensor.sensor_id
+            });
+        }
+
+
+        public class SecretDto
+        {
+            public string Secret { get; set; } = string.Empty;
+        }
+
+        [HttpPost("{id}/set-secret")]
+        public async Task<IActionResult> SetSecret(int id, [FromBody] SecretDto dto)
+        {
+            var sensor = await _context.Sensoren.FindAsync(id);
+            if (sensor == null)
+            {
+                return NotFound(new { message = "Sensor nicht gefunden" });
+            }
+
+            // Hashing mit BCrypt
+            sensor.secret_key = BCrypt.Net.BCrypt.HashPassword(dto.Secret);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Secret Key erfolgreich gesetzt" });
         }
 
         [HttpPut("{id}")]
@@ -56,18 +99,27 @@ namespace SecureArchCore.Controllers
             if (string.IsNullOrWhiteSpace(sensorUpdate.sensor_name))
                 return BadRequest("Sensorname darf nicht leer sein.");
 
-            var sensor = await _context.Sensoren.FindAsync(id);
-            if (sensor == null)
+            var sensorInDb = await _context.Sensoren.FindAsync(id);
+            if (sensorInDb == null)
                 return NotFound("Sensor nicht gefunden.");
 
-            sensor.sensor_name = sensorUpdate.sensor_name;
-            sensor.beschreibung = sensorUpdate.beschreibung;
-            sensor.ip_addresses = sensorUpdate.ip_addresses;
+            // Werte übernehmen
+            sensorInDb.sensor_name = sensorUpdate.sensor_name;
+            sensorInDb.beschreibung = sensorUpdate.beschreibung;
+            sensorInDb.kunden_id = sensorUpdate.kunden_id;
+            sensorInDb.ip_addresses = sensorUpdate.ip_addresses ?? new List<string>();
+
+            // Falls ein neues secret_key übergeben wurde, wird es gehasht
+            if (!string.IsNullOrWhiteSpace(sensorUpdate.secret_key))
+            {
+                sensorInDb.secret_key = PasswordHasher.Hash(sensorUpdate.secret_key);
+            }
 
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
 
         [HttpDelete("{sensor_id:int}")]
         public async Task<IActionResult> Delete(int sensor_id)

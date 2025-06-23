@@ -14,6 +14,14 @@ builder.Services.AddMudServices();
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
+try
+{
+    DotNetEnv.Env.Load();
+}
+catch (FileNotFoundException)
+{
+    //in container environment, .env file is not needed 
+} 
 
 
 builder.Services.AddCors(options =>
@@ -25,9 +33,11 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddScoped(sp =>
-    new HttpClient { BaseAddress = new Uri("https://localhost:7254/") });
+var apiBaseUrl = Environment.GetEnvironmentVariable("API_BASE_URL")
+                 ?? "https://localhost:7254/";
 
+builder.Services.AddScoped(sp =>
+    new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
 
 var app = builder.Build();
 app.UseCors("AllowBlazorClient"); // CORS-Middleware einsetzen

@@ -1,27 +1,29 @@
-﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+﻿
+using System.Net.Http.Json;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 using Blazored.LocalStorage;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Components.WebAssembly.Http;
-
 using SecureArchApp.Client.Services;
+using SecureArchApp.Client;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 builder.Services.AddMudServices();
 builder.Services.AddTransient<AuthorizationMessageHandler>();
-
-// Register the CredentialsHandler
 builder.Services.AddTransient<CredentialsHandler>();
 
-// HttpClient mit CredentialsHandler registrieren
+
+var http = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
+var config = await http.GetFromJsonAsync<Config>("appsettings.json");
+
+builder.Services.AddSingleton(config!);
+
 builder.Services.AddHttpClient("SecureAPI", client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7254");
+    client.BaseAddress = new Uri(config?.ApiBaseUrl ?? "https://localhost2:7254");
 })
 .AddHttpMessageHandler<CredentialsHandler>();
 
-// Optional: Falls du Default HttpClient verwenden willst (für DI via @inject HttpClient)
 builder.Services.AddScoped(sp =>
 {
     var factory = sp.GetRequiredService<IHttpClientFactory>();
@@ -29,3 +31,4 @@ builder.Services.AddScoped(sp =>
 });
 
 await builder.Build().RunAsync();
+

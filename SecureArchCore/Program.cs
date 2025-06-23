@@ -1,4 +1,3 @@
-
 using SecurityArch;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,28 +13,52 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        try
+        {
+            DotNetEnv.Env.Load();
+        }
+        catch (FileNotFoundException)
+        {
+            //in container environment, .env file is not needed 
+        }
         var builder = WebApplication.CreateBuilder(args);
- 
 
+        // === Umgebungsvariablen laden ===
+        var blazorClientUrl = Environment.GetEnvironmentVariable("BLAZOR_APP_URL");
+        var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
+        var dbConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+
+        if (string.IsNullOrWhiteSpace(jwtSecret))
+        {
+            throw new Exception("JWT_SECRET_KEY Umgebungsvariable ist nicht gesetzt.");
+        }
+
+        if (string.IsNullOrWhiteSpace(dbConnectionString))
+        {
+            throw new Exception("DB_CONNECTION_STRING Umgebungsvariable ist nicht gesetzt.");
+        }
+
+        // === Datenbank-Konfiguration ===
         builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-        
-        // Add services to the container.
+            options.UseNpgsql(dbConnectionString));
 
         builder.Services.AddHttpClient();
-
         builder.Services.AddControllers();
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+
+        // === CORS Konfiguration ===
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowBlazorClient", policy =>
             {
-                policy.WithOrigins("https://localhost:7255").AllowAnyHeader().AllowAnyMethod().AllowCredentials(); // GANZ WICHTIG!;
+                policy.WithOrigins(blazorClientUrl ?? "https://localhost:7255")
+                      .AllowAnyHeader()
+                      .AllowAnyMethod()
+                      .AllowCredentials();
             });
         });
-
+        // === JWT Authentifizierung ===
         builder.Services.AddAuthentication(opt =>
         {
             opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -47,8 +70,7 @@ public class Program
             {
                 OnMessageReceived = context =>
                 {
-                    // Hier wird das Token aus dem Cookie gelesen
-                    var token = context.Request.Cookies["auth-token"]; // <-- Cookie-Name anpassen!
+                    var token = context.Request.Cookies["auth-token"];
                     Console.WriteLine("JWT Cookie: " + token);
                     if (!string.IsNullOrEmpty(token))
                     {
@@ -64,30 +86,26 @@ public class Program
                 ValidateAudience = false,
                 ValidateLifetime = false,
                 ValidateIssuerSigningKey = false,
-                ValidIssuer = "https://www.derweinberger.at",
-                ValidAudience = "https://www.derweinberger.at",
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("REDACTED_CAUSE_GITHUB"))
+                ValidIssuer = "https://wwww.SecureArch.at",
+                ValidAudience = "https://www.S.at",
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
             };
         });
 
-
-
-
-
         var app = builder.Build();
 
-        // Configure the HTTP request pipeline.
+        // === HTTP Pipeline ===
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
             app.UseSwaggerUI();
         }
+
         app.UseCors("AllowBlazorClient");
         app.UseHttpsRedirection();
 
         app.UseAuthentication();
         app.UseAuthorization();
-
 
         app.MapControllers();
 

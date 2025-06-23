@@ -1,29 +1,42 @@
 ﻿@inherits LayoutComponentBase
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
 
-<MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
-<MudPopoverProvider />
-<MudDialogProvider />
-<MudSnackbarProvider />
-<MudLayout>
-    <MudAppBar Color="Color.Inherit" Elevation="4">
-        <MudText Typo="Typo.h6">Adminbereich</MudText>
-        <MudSpacer />
-        <MudButton OnClick="@(() => NavigationManager.NavigateTo("/"))">Zurück</MudButton>
-    </MudAppBar>
+@if (_isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+}
+else if (_hasAccess)
+{
+    <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
+    <MudPopoverProvider />
+    <MudDialogProvider />
+    <MudSnackbarProvider />
+    <MudLayout>
+        <MudAppBar Color="Color.Inherit" Elevation="4">
+            <MudText Typo="Typo.h6">Adminbereich</MudText>
+            <MudSpacer />
+            <MudButton OnClick="@(() => NavigationManager.NavigateTo("/"))">Zurück</MudButton>
+        </MudAppBar>
 
-    <MudDrawer Open="true" Elevation="1" Variant="DrawerVariant.Persistent">
-        <MudNavMenu>
-            <MudNavLink Href="/admin/customers" Icon="@Icons.Material.Filled.AttachMoney">Kunden</MudNavLink>
-            <MudNavLink Href="/admin/users" Icon="@Icons.Material.Filled.Person">User</MudNavLink>
-            <MudNavLink Href="/admin/sensors" Icon="@Icons.Material.Filled.Sensors">Sensors</MudNavLink>
-            <MudNavLink Href="/admin/sensorassignment" Icon="@Icons.Material.Filled.PivotTableChart">Sensor-Kunden Zuweisung</MudNavLink>
-        </MudNavMenu>
-    </MudDrawer>
+        <MudDrawer Open="true" Elevation="1" Variant="DrawerVariant.Persistent">
+            <MudNavMenu>
+                <MudNavLink Href="/admin/customers" Icon="@Icons.Material.Filled.AttachMoney">Kunden</MudNavLink>
+                <MudNavLink Href="/admin/users" Icon="@Icons.Material.Filled.Person">User</MudNavLink>
+                <MudNavLink Href="/admin/sensors" Icon="@Icons.Material.Filled.Sensors">Sensors</MudNavLink>
+                <MudNavLink Href="/admin/sensorassignment" Icon="@Icons.Material.Filled.PivotTableChart">Sensor-Kunden Zuweisung</MudNavLink>
+            </MudNavMenu>
+        </MudDrawer>
 
-    <MudMainContent>
-        @Body
-    </MudMainContent>
-</MudLayout>
+        <MudMainContent>
+            @Body
+        </MudMainContent>
+    </MudLayout>
+}
+else
+{
+    <MudAlert Severity="Severity.Error">Kein Zugriff auf diesen Bereich.</MudAlert>
+}
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
@@ -34,29 +47,46 @@
 @code {
     private bool _drawerOpen = true;
     private bool _isDarkMode = true;
+    private bool _isLoading = true;
+    private bool _hasAccess = false;
     private MudTheme? _theme = null;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
-
         _theme = new()
             {
                 PaletteLight = _lightPalette,
                 PaletteDark = _darkPalette,
                 LayoutProperties = new LayoutProperties()
             };
+
+        try
+        {
+            var response = await Http.GetAsync("/CoreService/getrole");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var role = await response.Content.ReadAsStringAsync();
+                _hasAccess = role.Contains("Admin", StringComparison.OrdinalIgnoreCase);
+            }
+            else
+            {
+                _hasAccess = false;
+            }
+        }
+        catch
+        {
+            _hasAccess = false;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
     }
 
-    private void DrawerToggle()
-    {
-        _drawerOpen = !_drawerOpen;
-    }
+    private void DrawerToggle() => _drawerOpen = !_drawerOpen;
 
-    private void DarkModeToggle()
-    {
-        _isDarkMode = !_isDarkMode;
-    }
+    private void DarkModeToggle() => _isDarkMode = !_isDarkMode;
 
     private readonly PaletteLight _lightPalette = new()
         {
@@ -97,14 +127,7 @@
             OverlayLight = "#1e1e2d80",
         };
 
-    public string DarkLightModeButtonIcon => _isDarkMode switch
-    {
-        true => Icons.Material.Rounded.AutoMode,
-        false => Icons.Material.Outlined.DarkMode,
-    };
-    @code {
-        [Inject] NavigationManager NavigationManager { get; set; } = default!;
-    }
+    public string DarkLightModeButtonIcon => _isDarkMode
+        ? Icons.Material.Rounded.AutoMode
+        : Icons.Material.Outlined.DarkMode;
 }
-
-

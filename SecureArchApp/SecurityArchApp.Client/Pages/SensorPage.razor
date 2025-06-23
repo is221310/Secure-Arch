@@ -34,6 +34,16 @@
 
             <MudButton Variant="Variant.Outlined" OnClick="HinzufuegenIp">+ IP-Adresse hinzufügen</MudButton>
 
+            <MudDivider Class="my-3" />
+
+            <MudText Typo="Typo.subtitle2">Secret Key</MudText>
+            <MudTextField @bind-Value="_secretKey" Label="Secret setzen" InputType="InputType.Password" />
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                Das Secret wird beim Speichern gehashed. Dieses Feld ist optional.
+            </MudText>
+
+            <MudDivider Class="my-3" />
+
             <MudButton Color="Color.Primary" OnClick="SpeichernSensor" Class="mt-3">Speichern</MudButton>
             <MudButton Color="Color.Secondary" OnClick="CloseForm" Class="mt-3 ml-2">Abbrechen</MudButton>
         </MudPaper>
@@ -71,6 +81,7 @@
     private List<Sensor> sensoren = new();
     private Sensor _bearbeiteSensor = new();
     private bool _formularSichtbar = false;
+    private string _secretKey = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -85,6 +96,7 @@
     private void OpenNeuerForm()
     {
         _bearbeiteSensor = new Sensor { ip_addresses = new List<string>() };
+        _secretKey = string.Empty;
         _formularSichtbar = true;
     }
 
@@ -98,12 +110,14 @@
                 ip_addresses = new List<string>(sensor.ip_addresses),
                 created_at = sensor.created_at
             };
+        _secretKey = string.Empty;
         _formularSichtbar = true;
     }
 
     private void CloseForm()
     {
         _formularSichtbar = false;
+        _secretKey = string.Empty;
     }
 
     private void HinzufuegenIp()
@@ -137,12 +151,24 @@
 
         if (response.IsSuccessStatusCode)
         {
+            if (!string.IsNullOrWhiteSpace(_secretKey))
+            {
+                // Nach dem Speichern das Secret setzen
+                var secretResponse = await Http.PostAsJsonAsync($"api/sensor/{_bearbeiteSensor.sensor_id}/set-secret", new { secret = _secretKey });
+
+                if (!secretResponse.IsSuccessStatusCode)
+                {
+                    // Optional: Fehler anzeigen
+                }
+            }
+
             _formularSichtbar = false;
+            _secretKey = string.Empty;
             await LadeSensoren();
         }
         else
         {
-            // Fehler anzeigen (optional)
+            // Optional: Fehleranzeige
         }
     }
 
