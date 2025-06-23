@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Net;
 using System.Text.Json;
+using SecureArchCore.Models;
 
 public class AppDbContext : DbContext
 {
