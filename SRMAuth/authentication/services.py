@@ -8,7 +8,7 @@ from datetime import timedelta, datetime
 from jose import jwt
 from core.security import verify_password
 from users.models import UserModel, SensorModel
-
+from typing import Optional
 
 
 jwt_settings = JWTSettings() # type: ignore
@@ -19,30 +19,33 @@ async def login(login_data: LoginRequest, db) -> TokenResponse:
 
 
     """Create access and refresh tokens for the user."""
-    # Verify user credentials
-    if not verify_user(login_data, db):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
     
-    # If user exists, generate access and refresh tokens
+    # Get user data
+    user = verify_user(login_data, db)
     
-    role = db.query(UserModel.role).filter(UserModel.email == login_data.username).first()
-    if not role:
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User role not found",
+            detail="User not found",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
     
     access_token_expiration = datetime.utcnow() + timedelta(minutes=jwt_settings.JWT_EXPIRATION_TIME)
     refresh_token_expiration = datetime.utcnow() + timedelta(minutes=jwt_settings.JWT_REFRESH_EXPIRATION_TIME)
-    token_data = {"sub": login_data.username, "role": role}
+
+    token_data = {
+        "sub": user.email, 
+        "user_id": user.id,
+        "email": user.email,
+        "role": user.role if hasattr(user, 'role') else "user"
+    }
     access_token = create_access_token(token_data, access_token_expiration)
     refresh_token = create_refresh_token(token_data, refresh_token_expiration)
     
+    """    Store tokens in Redis with the username as the key.
+    This allows us to easily retrieve the tokens later for validation."""
+
     # Store tokens in Redis
     redis_client = get_redis_client()
     
@@ -69,24 +72,19 @@ async def login(login_data: LoginRequest, db) -> TokenResponse:
         token_type="bearer"
     )
 
-def verify_user(data, db) -> bool:
-    """Check if the user exists in the database."""
-    # Query the database for the user by email -> unique ID
+def verify_user(data: LoginRequest, db) -> Optional[UserModel]:
+    """
+    Check if the user exists and verify the password.
+    Returns the user object on success, None on failure.
+    """
+    # Query the database for the user by email
     user = db.query(UserModel).filter(UserModel.email == data.username).first()
 
-    # If user does not exist, raise an error
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    # If user does not exist, or password does not match, return None.
+    if not user or not verify_password(data.password, user.password):
+        return None
     
-    # If user exists, verify the password
-    if not verify_password(data.password, user.password):
-        return False
-    
-    return True  
+    return user
 
 
 
@@ -195,57 +193,4 @@ def verify_sensor(data, db) -> bool:
     if not verify_password(data.password, account.secret_key):
         return False
     
-    return True  
-"""async def login(login_data: LoginRequest, db) -> TokenResponse:
-
-
-    
-    # Verify user credentials
-    if not verify_user(login_data, db):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    # If user exists, generate access and refresh tokens
-    
-    role = db.query(UserModel.role).filter(UserModel.email == login_data.username).first()
-    if not role:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User role not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    access_token_expiration = datetime.utcnow() + timedelta(minutes=jwt_settings.JWT_EXPIRATION_TIME)
-    refresh_token_expiration = datetime.utcnow() + timedelta(minutes=jwt_settings.JWT_REFRESH_EXPIRATION_TIME)
-    token_data = {"sub": login_data.username, "role": role}
-    access_token = create_access_token(token_data, access_token_expiration)
-    refresh_token = create_refresh_token(token_data, refresh_token_expiration)
-    
-    # Store tokens in Redis
-    redis_client = get_redis_client()
-    
-    # Store access token (expire in 15 minutes)
-    redis_client.setex(
-        f"access_token:{login_data.username}", 
-        timedelta(minutes=15), 
-        access_token
-    )
-    
-    # Store refresh token (expire in 7 days) with
-    redis_client.setex(
-        f"refresh_token:{login_data.username}", 
-        timedelta(days=7), 
-        refresh_token
-    )
-    
-    return TokenResponse(
-        username=login_data.username,
-        access_token=access_token,
-        access_token_expiration= access_token_expiration,
-        refresh_token=refresh_token,
-        refresh_token_expiration=refresh_token_expiration,
-        token_type="bearer"
-    )"""
+    return True

@@ -1,16 +1,13 @@
--- Step 1: Create schema and set search path
 CREATE SCHEMA IF NOT EXISTS securearch;
-SET search_path TO securearch, public;
+SET search_path TO securearch;
 
--- Step 2: Create table 'kunden' first (with explicit schema qualification)
-CREATE TABLE IF NOT EXISTS securearch.kunden (
+CREATE TABLE IF NOT EXISTS kunden (
     kunden_id SERIAL PRIMARY KEY,
     kunden_name VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Step 3: Create dependent table 'users' (with explicit schema qualification)
-CREATE TABLE IF NOT EXISTS securearch.users (
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     firstname VARCHAR(50) NOT NULL,
     lastname VARCHAR(50) NOT NULL,
@@ -22,22 +19,22 @@ CREATE TABLE IF NOT EXISTS securearch.users (
     kunden_id INT,
     created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_kunden FOREIGN KEY (kunden_id) REFERENCES securearch.kunden(kunden_id)
+    CONSTRAINT fk_kunden FOREIGN KEY (kunden_id) REFERENCES Kunden(kunden_id)
 );
 
--- Step 4: Create table 'sensoren' referencing 'kunden' (with explicit schema qualification)
-CREATE TABLE IF NOT EXISTS securearch.sensoren (
+
+CREATE TABLE IF NOT EXISTS sensoren (
     sensor_id SERIAL PRIMARY KEY,
     sensor_name VARCHAR(255) NOT NULL,
-    secret_key VARCHAR(255),
-    beschreibung TEXT,
+    secret_key VARCHAR(255) NOT NULL,
+    beschreibung TEXT,      
     kunden_id INT,
-    ip_addresses JSONB DEFAULT '[]',
+    ip_addresses JSONB  DEFAULT '[]',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_sensor_kunde FOREIGN KEY (kunden_id) REFERENCES securearch.kunden(kunden_id)
+    CONSTRAINT fk_sensor_kunde FOREIGN KEY (kunden_id) REFERENCES Kunden(kunden_id)
 );
 
-CREATE TABLE securearch.ip_results (
+CREATE TABLE ip_results (
     id SERIAL PRIMARY KEY,
     sensor_id INTEGER NOT NULL,
     ip_address TEXT NOT NULL,
@@ -49,7 +46,7 @@ CREATE TABLE securearch.ip_results (
         ON DELETE CASCADE
 );
 
-CREATE TABLE securearch.temperatur (
+CREATE TABLE temperatur (
     id SERIAL PRIMARY KEY,
     sensor_id INTEGER NOT NULL,
     temperatur DOUBLE PRECISION NOT NULL,
@@ -61,29 +58,26 @@ CREATE TABLE securearch.temperatur (
 );
 
 
--- Step 5: Insert data into 'kunden'
-INSERT INTO securearch.kunden (kunden_name) VALUES
+-- Rest of your INSERT statements...
+INSERT INTO Kunden (kunden_name) VALUES
 ('Musterkunde GmbH'),
 ('Beispiel AG'),
-('Demo Firma')
-ON CONFLICT DO NOTHING;
+('Demo Firma');
 
--- Step 6: Insert data into 'users'
-INSERT INTO securearch.users (firstname, lastname, email, password, telephone, role, address, kunden_id) VALUES
+INSERT INTO Users (firstname, lastname, email, password, telephone, role, address, kunden_id) VALUES
 ('Max', 'Mustermann', 'max@example.com', '$2y$10$wZgGtX8Yi6DpCMEJTBmE5e6i3CxmuToI/E5tLYIaOhj5xGBO1hNne', '0123456789', 'Admin', 'Musterstraße 1, 12345 Musterstadt', 1),
 ('Erika', 'Musterfrau', 'erika@example.com','$2y$10$wZgGtX8Yi6DpCMEJTBmE5e6i3CxmuToI/E5tLYIaOhj5xGBO1hNne', '0987654321', 'Kunde', 'Beispielweg 5, 54321 Beispielstadt', 2),
 ('Hans', 'Huber', 'hans.huber@example.com','$2y$10$wZgGtX8Yi6DpCMEJTBmE5e6i3CxmuToI/E5tLYIaOhj5xGBO1hNne', '01234', 'Mitarbeiter', 'Hauptstraße 12, 10115 Berlin', NULL),
 ('Anna', 'Schmidt', 'anna.schmidt@example.com','$2y$10$wZgGtX8Yi6DpCMEJTBmE5e6i3CxmuToI/E5tLYIaOhj5xGBO1hNne', '0301234567', 'abc', 'abc', 3),
-('Peter', 'Müller', 'peter.mueller@example.com','$2y$10$wZgGtX8Yi6DpCMEJTBmE5e6i3CxmuToI/E5tLYIaOhj5xGBO1hNne', '015112345678', 'Mitarbeiter', 'Lindenallee 8, 20095 Hamburg', NULL)
-ON CONFLICT (email) DO NOTHING;
+('Peter', 'Müller', 'peter.mueller@example.com','$2y$10$wZgGtX8Yi6DpCMEJTBmE5e6i3CxmuToI/E5tLYIaOhj5xGBO1hNne', '015112345678', 'Mitarbeiter', 'Lindenallee 8, 20095 Hamburg', NULL);
 
-
-INSERT INTO Sensoren (sensor_name, beschreibung, kunden_id, ip_addresses)
+INSERT INTO Sensoren (sensor_name, secret_key, beschreibung, kunden_id, ip_addresses)
 VALUES 
-('sensor1', 'Raum 101', 1, '["192.168.0.101", "192.168.0.102"]'),
-('sensor2 B2', 'Raum 102', 1, '["10.0.0.10", "10.0.0.11"]'),
-('sensor3', 'Raum 103', 2, '["172.16.5.1"]'),
-('sensor4', 'Raum 104', 3, '["192.168.100.10", "192.168.100.11", "192.168.100.12"]');
+('Temperatursensor A1', '$2y$10$wZgGtX8Yi6DpCMEJTBmE5e6i3CxmuToI/E5tLYIaOhj5xGBO1hNne', 'Raum 101', 1, '["192.168.0.101", "192.168.0.102"]'),
+('Feuchtigkeitssensor B2', '$2y$10$wZgGtX8Yi6DpCMEJTBmE5e6i3CxmuToI/E5tLYIaOhj5xGBO1hNne', 'Keller', 1, '["10.0.0.10", "10.0.0.11"]'),
+('Bewegungsmelder C3', '$2y$10$wZgGtX8Yi6DpCMEJTBmE5e6i3CxmuToI/E5tLYIaOhj5xGBO1hNne', 'Eingangshalle', 2, '["172.16.5.1"]'),
+('Luftqualitätssensor D4', '$2y$10$wZgGtX8Yi6DpCMEJTBmE5e6i3CxmuToI/E5tLYIaOhj5xGBO1hNne', 'Büro 3.OG', 3, '["192.168.100.10", "192.168.100.11", "192.168.100.12"]');
+
 
 INSERT INTO Temperatur ("SensorId", "Wert")
 VALUES
