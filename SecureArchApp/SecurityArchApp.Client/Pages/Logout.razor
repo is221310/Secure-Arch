@@ -1,0 +1,13 @@
+﻿@page "/logout"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<MudText>Logging out...</MudText>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Http.PostAsync("CoreService/logout", null);
+ 
+    }
+}
