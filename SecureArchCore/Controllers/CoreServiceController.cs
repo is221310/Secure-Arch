@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 using System.Text.Json;
 
@@ -96,18 +97,18 @@ public class CoreServiceController : ControllerBase
         return Ok(kunde);
     }
 
-
     [HttpPost]
     [Route("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
     {
         if (loginRequest == null || string.IsNullOrEmpty(loginRequest.Username) || string.IsNullOrEmpty(loginRequest.Password))
-        {
             return BadRequest("Username und Passwort müssen gesetzt sein.");
-        }
 
-        //TODO aus Env holen 
-        var apiUrl = "http://localhost:8000/auth/token";
+        var baseUrl = Environment.GetEnvironmentVariable("AUTH_API_BASE_URL");
+        if (string.IsNullOrEmpty(baseUrl))
+            return StatusCode(500, "AUTH_API_BASE_URL nicht gesetzt.");
+
+        var apiUrl = $"{baseUrl.TrimEnd('/')}/auth/token";
 
         var response = await _httpClient.PostAsJsonAsync(apiUrl, new
         {
@@ -116,19 +117,16 @@ public class CoreServiceController : ControllerBase
         });
 
         if (!response.IsSuccessStatusCode)
-        {
             return StatusCode((int)response.StatusCode, "Authentifizierung fehlgeschlagen.");
-        }
-        var jsonString = await response.Content.ReadAsStringAsync();
 
+        var jsonString = await response.Content.ReadAsStringAsync();
         using var jsonDoc = JsonDocument.Parse(jsonString);
         var root = jsonDoc.RootElement;
 
-        if (root.TryGetProperty("access_token", out JsonElement accessTokenElement) &&
-            root.TryGetProperty("refresh_token", out JsonElement refreshTokenElement))
+        if (root.TryGetProperty("access_token", out var accessTokenElement) &&
+            root.TryGetProperty("refresh_token", out var refreshTokenElement))
         {
             var accessToken = accessTokenElement.GetString();
-            var refreshToken = refreshTokenElement.GetString();
 
             var cookieOptions = new CookieOptions
             {
@@ -139,12 +137,75 @@ public class CoreServiceController : ControllerBase
             };
 
             Response.Cookies.Append("auth-token", accessToken, cookieOptions);
-
             return Ok();
         }
-        else
-        {
-            return BadRequest("Token konnte nicht extrahiert werden.");
-        }
+
+        return BadRequest("Token konnte nicht extrahiert werden.");
     }
+
+    [HttpPost]
+    [Route("loginsensor")]
+    public async Task<IActionResult> LoginSensor([FromBody] LoginRequest loginRequest)
+    {
+        if (loginRequest == null || string.IsNullOrEmpty(loginRequest.Username) || string.IsNullOrEmpty(loginRequest.Password))
+            return BadRequest("Username und Passwort müssen gesetzt sein.");
+
+        var baseUrl = Environment.GetEnvironmentVariable("AUTH_API_BASE_URL");
+        if (string.IsNullOrEmpty(baseUrl))
+            return StatusCode(500, "AUTH_API_BASE_URL nicht gesetzt.");
+
+        var apiUrl = $"{baseUrl.TrimEnd('/')}/auth/token/sensor";
+
+        var response = await _httpClient.PostAsJsonAsync(apiUrl, new
+        {
+            username = loginRequest.Username,
+            password = loginRequest.Password
+        });
+
+        if (!response.IsSuccessStatusCode)
+            return StatusCode((int)response.StatusCode, "Authentifizierung fehlgeschlagen.");
+
+        var jsonString = await response.Content.ReadAsStringAsync();
+        using var jsonDoc = JsonDocument.Parse(jsonString);
+        var root = jsonDoc.RootElement;
+
+        if (root.TryGetProperty("access_token", out var accessTokenElement) &&
+            root.TryGetProperty("refresh_token", out var refreshTokenElement))
+        {
+            var accessToken = accessTokenElement.GetString();
+
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTimeOffset.UtcNow.AddDays(1)
+            };
+
+            Response.Cookies.Append("auth-token", accessToken, cookieOptions);
+            return Ok();
+        }
+
+        return BadRequest("Token konnte nicht extrahiert werden.");
+    }
+
+
+
+
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        Response.Cookies.Append("auth-token", "", new CookieOptions
+        {
+            Expires = DateTimeOffset.UtcNow.AddDays(-1),
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None
+        });
+
+        return Ok();
+    }
+
+
+
 }
