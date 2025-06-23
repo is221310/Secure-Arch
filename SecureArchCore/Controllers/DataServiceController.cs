@@ -7,7 +7,7 @@ namespace SecureArchCore.Controllers
 {
 
         [ApiController]
-        [Route("api/[controller]")]
+        [Route("[controller]")]
         public class DataServiceController : ControllerBase
         {
             private readonly AppDbContext _context;
@@ -163,27 +163,46 @@ namespace SecureArchCore.Controllers
             public DateTime timestamp { get; set; } = DateTime.UtcNow;
         }
 
-        [HttpPost("ipresults/")]
-        public async Task<IActionResult> PostIpResultBySensorName([FromBody] IpResultCreateByNameDto dto)
+        [HttpPost("ipresults")]
+        public async Task<IActionResult> PostIpResultsBySensor([FromBody] Dictionary<string, string> ipStatusMap)
         {
-            var sensor = await _context.Sensoren
-                .FirstOrDefaultAsync(s => s.sensor_name == dto.sensor_name);
+            // 1. Sensorname aus 'sub' Claim auslesen
+            var sensorName =  User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+            if (string.IsNullOrEmpty(sensorName))
+                return Unauthorized("Kein 'sub'-Claim im JWT.");
 
+            // 2. Sensor aus DB laden
+            var sensor = await _context.Sensoren.FirstOrDefaultAsync(s => s.sensor_name == sensorName);
             if (sensor == null)
-                return NotFound($"Sensor mit Name '{dto.sensor_name}' nicht gefunden.");
+                return NotFound($"Sensor mit Name '{sensorName}' nicht gefunden.");
 
-            var ipResult = new IpResult
+            // 3. Neue IpResults für jede IP im Dictionary erstellen
+            var now = DateTime.UtcNow;
+            var ipResults = new List<IpResult>();
+
+            foreach (var kvp in ipStatusMap)
             {
-                sensor_id = sensor.sensor_id,
-                ip_address = dto.ip_address,
-                status = dto.status,
-                timestamp = dto.timestamp
-            };
+                bool status = false;
+                if (!bool.TryParse(kvp.Value, out status))
+                {
+                    // Optional: Fehler für ungültigen Status-Wert
+                    return BadRequest($"Ungültiger Status-Wert für IP '{kvp.Key}': '{kvp.Value}'. Erwartet 'true' oder 'false'.");
+                }
 
-            _context.IpResults.Add(ipResult);
+                ipResults.Add(new IpResult
+                {
+                    sensor_id = sensor.sensor_id,
+                    ip_address = kvp.Key,
+                    status = status,
+                    timestamp = now
+                });
+            }
+
+            // 4. Speichern in DB
+            _context.IpResults.AddRange(ipResults);
             await _context.SaveChangesAsync();
 
-            return Ok(ipResult);
+            return Ok(ipResults);
         }
 
         public class IpResultCreateDto
