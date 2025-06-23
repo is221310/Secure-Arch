@@ -75,29 +75,31 @@ namespace SecureArchCore.Controllers
             return Ok(temperaturen);
         }
 
-        public class TemperaturCreateByNameDto
+        public class TemperaturCreateDto
         {
-            public string sensor_name { get; set; } = string.Empty;
-            public double temperatur { get; set; }
-            public DateTime timestamp { get; set; } = DateTime.UtcNow;
+            public double Temperatur { get; set; }
+            public DateTime Timestamp { get; set; } = default;
         }
 
+        [Authorize]
         [HttpPost("temperatur")]
-        public async Task<IActionResult> PostTemperaturByName([FromBody] TemperaturCreateByNameDto dto)
+        public async Task<IActionResult> PostTemperaturBySensor([FromBody] TemperaturCreateDto dto)
         {
-            var sensor = await _context.Sensoren
-                .FirstOrDefaultAsync(s => s.sensor_name == dto.sensor_name);
+            // Sensorname aus JWT 'sub'-Claim lesen
+            var sensorName = User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+            if (string.IsNullOrEmpty(sensorName))
+                return Unauthorized("Kein 'sub'-Claim im JWT.");
 
+            // Sensor aus der DB laden
+            var sensor = await _context.Sensoren.FirstOrDefaultAsync(s => s.sensor_name == sensorName);
             if (sensor == null)
-            {
-                return NotFound($"Sensor mit Name '{dto.sensor_name}' nicht gefunden.");
-            }
+                return NotFound($"Sensor mit Name '{sensorName}' nicht gefunden.");
 
             var temperatur = new Temperatur
             {
                 sensor_id = sensor.sensor_id,
-                temperatur = dto.temperatur,
-                timestamp = dto.timestamp
+                temperatur = dto.Temperatur,
+                timestamp = dto.Timestamp == default ? DateTime.UtcNow : dto.Timestamp
             };
 
             _context.Temperaturen.Add(temperatur);
