@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SecureArchCore.Models;
 
@@ -16,6 +17,7 @@ namespace SecureArchCore.Controllers
             _context = context;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -23,6 +25,7 @@ namespace SecureArchCore.Controllers
             return Ok(kunden);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] Kunde kundeDto)
         {
@@ -40,6 +43,7 @@ namespace SecureArchCore.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Kunde neuerKunde)
         {
@@ -58,6 +62,7 @@ namespace SecureArchCore.Controllers
             return CreatedAtAction(nameof(GetAll), new { id = neuerKunde.kunden_id }, neuerKunde);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{kundenId:int}")]
         public async Task<IActionResult> Delete(int kundenId)
         {

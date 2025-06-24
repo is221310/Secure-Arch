@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SecureArchCore.Models;
 using SecureArchCore.Helper;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace SecureArchCore.Controllers
@@ -29,6 +30,8 @@ namespace SecureArchCore.Controllers
             public string Secret { get; set; } = string.Empty;
         }
 
+
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -36,6 +39,8 @@ namespace SecureArchCore.Controllers
             return Ok(sensoren);
         }
 
+
+        [Authorize(Roles = "Admin")]
         [HttpGet("withCustomers")]
         public async Task<IActionResult> GetAllWithCustomers()
         {
@@ -46,7 +51,8 @@ namespace SecureArchCore.Controllers
             return Ok(sensoren);
         }
 
-  
+
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Sensor neuerSensor)
         {
@@ -73,8 +79,8 @@ namespace SecureArchCore.Controllers
         }
 
 
-  
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("{id}/set-secret")]
         public async Task<IActionResult> SetSecret(int id, [FromBody] SecretDto dto)
         {
@@ -92,6 +98,9 @@ namespace SecureArchCore.Controllers
             return Ok(new { message = "Secret Key erfolgreich gesetzt" });
         }
 
+
+
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] Sensor sensorUpdate)
         {
@@ -122,6 +131,7 @@ namespace SecureArchCore.Controllers
         }
 
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{sensor_id:int}")]
         public async Task<IActionResult> Delete(int sensor_id)
         {
@@ -135,6 +145,9 @@ namespace SecureArchCore.Controllers
             return NoContent();
         }
 
+
+
+        [Authorize(Roles = "Admin")]
         [HttpPut("{sensorId}/assign/{kundenId}")]
         public async Task<IActionResult> AssignSensorToKunde(int sensorId, int kundenId)
         {
@@ -150,6 +163,8 @@ namespace SecureArchCore.Controllers
             return NoContent();
         }
 
+
+        [Authorize(Roles = "Admin")]
         [HttpPost("assignments")]
         public async Task<IActionResult> SaveAssignments([FromBody] List<SensorAssignmentDto> assignments)
         {

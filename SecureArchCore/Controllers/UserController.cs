@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Crypto.Generators;
 using SecureArchCore.Models;
@@ -27,7 +28,7 @@ namespace SecureArchCore.Controllers
             public string address { get; set; } = string.Empty;
             public int? kunden_id { get; set; }
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<ActionResult<List<User>>> GetAllWithCustomers()
         {
@@ -49,7 +50,7 @@ namespace SecureArchCore.Controllers
 
             return Ok(users);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetById(int id)
         {
@@ -75,7 +76,7 @@ namespace SecureArchCore.Controllers
         }
 
 
-
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> RegisterUser([FromBody] UserCreateDto dto)
         {
@@ -140,7 +141,7 @@ namespace SecureArchCore.Controllers
             return NoContent();
         }
 
-
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

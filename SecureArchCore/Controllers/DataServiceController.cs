@@ -50,41 +50,27 @@ namespace SecureArchCore.Controllers
 
 
 
-        [HttpGet("getConfig/{sensorName}")]
-            public async Task<IActionResult> GetConfig(string sensorName)
-            {
-                var sensor = await _context.Sensoren
-                    .FirstOrDefaultAsync(s => s.sensor_name == sensorName);
+        [Authorize]
+        [HttpGet("getConfig")]
+        public async Task<IActionResult> GetConfig()
+        {
+            var sensorName = User.Claims
+                 .FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
 
-                if (sensor == null)
-                    return NotFound($"Sensor mit Name '{sensorName}' nicht gefunden.");
+            if (string.IsNullOrEmpty(sensorName))
+                return BadRequest("Sensorname konnte aus dem Benutzer-Claim nicht ermittelt werden.");
 
-                var ipList = sensor.ip_addresses ?? new List<string>();
-                return Ok(ipList);
-            }
-        
-            [HttpGet("temperatur")]
-            public async Task<IActionResult> GetAllTemperaturen()
-            {
-                var daten = await _context.Temperaturen
-                    .Include(t => t.Sensor)
-                    .OrderByDescending(t => t.timestamp)
-                    .ToListAsync();
+            var sensor = await _context.Sensoren
+                .FirstOrDefaultAsync(s => s.sensor_name == sensorName);
 
-                return Ok(daten);
-            }
+            if (sensor == null)
+                return NotFound($"Sensor mit Name '{sensorName}' nicht gefunden.");
 
-            [HttpGet("temperatur/sensor/{sensorId}")]
-            public async Task<IActionResult> GetTemperaturenBySensor(int sensorId)
-            {
-                var daten = await _context.Temperaturen
-                    .Where(t => t.sensor_id == sensorId)
-                    .OrderByDescending(t => t.timestamp)
-                    .ToListAsync();
+            var ipList = sensor.ip_addresses ?? new List<string>();
 
-                return Ok(daten);
-            }
 
+            return Ok(ipList);
+        }
 
 
         [HttpGet("temperaturen/by-user/")]
@@ -157,28 +143,6 @@ namespace SecureArchCore.Controllers
         }
 
 
-        [HttpGet("ipresults")]
-            public async Task<IActionResult> GetAllIpResults()
-            {
-                var daten = await _context.IpResults
-                    .Include(r => r.Sensor)
-                    .OrderByDescending(r => r.timestamp)
-                    .ToListAsync();
-
-                return Ok(daten);
-            }
-
-            [HttpGet("ipresults/sensor/{sensorId}")]
-            public async Task<IActionResult> GetIpResultsBySensor(int sensorId)
-            {
-                var daten = await _context.IpResults
-                    .Where(r => r.sensor_id == sensorId)
-                    .OrderByDescending(r => r.timestamp)
-                    .ToListAsync();
-
-                return Ok(daten);
-            }
-
 
         [Authorize]
         [HttpGet("ipresults/by-user/")]
@@ -218,6 +182,48 @@ namespace SecureArchCore.Controllers
                         timestamp = ip.timestamp
                     })
                 .ToListAsync();
+
+            return Ok(ipResults);
+        }
+
+        [HttpPost("ipresults")]
+        public async Task<IActionResult> PostIpResultsBySensor([FromBody] Dictionary<string, string> ipStatusMap)
+        {
+            // 1. Sensorname aus 'sub' Claim auslesen
+            var sensorName = User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+            if (string.IsNullOrEmpty(sensorName))
+                return Unauthorized("Kein 'sub'-Claim im JWT.");
+
+            // 2. Sensor aus DB laden
+            var sensor = await _context.Sensoren.FirstOrDefaultAsync(s => s.sensor_name == sensorName);
+            if (sensor == null)
+                return NotFound($"Sensor mit Name '{sensorName}' nicht gefunden.");
+
+            // 3. Neue IpResults für jede IP im Dictionary erstellen
+            var now = DateTime.UtcNow;
+            var ipResults = new List<IpResult>();
+
+            foreach (var kvp in ipStatusMap)
+            {
+                bool status = false;
+                if (!bool.TryParse(kvp.Value, out status))
+                {
+                    // Optional: Fehler für ungültigen Status-Wert
+                    return BadRequest($"Ungültiger Status-Wert für IP '{kvp.Key}': '{kvp.Value}'. Erwartet 'true' oder 'false'.");
+                }
+
+                ipResults.Add(new IpResult
+                {
+                    sensor_id = sensor.sensor_id,
+                    ip_address = kvp.Key,
+                    status = status,
+                    timestamp = now
+                });
+            }
+
+            // 4. Speichern in DB
+            _context.IpResults.AddRange(ipResults);
+            await _context.SaveChangesAsync();
 
             return Ok(ipResults);
         }
