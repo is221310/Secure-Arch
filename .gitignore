@@ -1,0 +1,9 @@
+# Umgebungsvariablen
+app/.env
+
+# Mosquitto Passwort-Datei
+config/passwd
+
+# Python Cache
+__pycache__/
+*.pyc
