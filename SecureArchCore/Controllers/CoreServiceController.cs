@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-
 using System.Text.Json;
 
 namespace SecurityArch.Controllers;
@@ -127,6 +126,7 @@ public class CoreServiceController : ControllerBase
             root.TryGetProperty("refresh_token", out var refreshTokenElement))
         {
             var accessToken = accessTokenElement.GetString();
+            var refreshToken = refreshTokenElement.GetString();
 
             var cookieOptions = new CookieOptions
             {
@@ -137,10 +137,66 @@ public class CoreServiceController : ControllerBase
             };
 
             Response.Cookies.Append("auth-token", accessToken, cookieOptions);
+            Response.Cookies.Append("refresh-token", refreshToken, cookieOptions);
+
             return Ok();
         }
 
         return BadRequest("Token konnte nicht extrahiert werden.");
+    }
+
+    [HttpPost]
+    [Route("refresh")]
+    [Authorize]
+    public async Task<IActionResult> RefreshToken()
+    {
+        var baseUrl = Environment.GetEnvironmentVariable("AUTH_API_BASE_URL");
+        if (string.IsNullOrEmpty(baseUrl))
+            return StatusCode(500, "AUTH_API_BASE_URL nicht gesetzt.");
+
+        var username = User.Claims.FirstOrDefault(c =>
+            c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
+        if (string.IsNullOrEmpty(username))
+            return Unauthorized("Benutzername konnte nicht aus dem Token gelesen werden.");
+
+        var refreshToken = Request.Cookies["refresh-token"];
+        if (string.IsNullOrEmpty(refreshToken))
+            return Unauthorized("Kein Refresh-Token im Cookie gefunden.");
+
+        var apiUrl = $"{baseUrl.TrimEnd('/')}/auth/refresh";
+
+        var response = await _httpClient.PostAsJsonAsync(apiUrl, new
+        {
+            username = username,
+            refresh_token = refreshToken
+        });
+
+        if (!response.IsSuccessStatusCode)
+            return StatusCode((int)response.StatusCode, "Token-Refresh fehlgeschlagen.");
+
+        var jsonString = await response.Content.ReadAsStringAsync();
+        using var jsonDoc = JsonDocument.Parse(jsonString);
+        var root = jsonDoc.RootElement;
+
+        if (root.TryGetProperty("access_token", out var accessTokenElement))
+        {
+            var accessToken = accessTokenElement.GetString();
+
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTimeOffset.UtcNow.AddDays(1)
+            };
+
+            Response.Cookies.Append("auth-token", accessToken, cookieOptions);
+
+            return Ok();
+        }
+
+        return BadRequest("Neue Tokens konnten nicht extrahiert werden.");
     }
 
     [HttpPost]
@@ -202,6 +258,16 @@ public class CoreServiceController : ControllerBase
             Secure = true,
             SameSite = SameSiteMode.None
         });
+
+        Response.Cookies.Append("refresh-token", "", new CookieOptions
+        {
+            Expires = DateTimeOffset.UtcNow.AddDays(-1),
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None
+        });
+
+
 
         return Ok();
     }

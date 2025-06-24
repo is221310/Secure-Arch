@@ -35,20 +35,31 @@
 
         try
         {
-            // Einfach die API aufrufen — der Cookie wird automatisch mitgesendet
             var userResponse = await Http.GetAsync("CoreService/me");
             if (userResponse.IsSuccessStatusCode)
             {
                 Nav.NavigateTo(returnUrl, true);
+                return;
             }
-            else if (userResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+
+            if (userResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
-                // Kein gültiger User, bleib auf Login
+                var refreshResponse = await Http.PostAsync("CoreService/refresh", null);
+                if (refreshResponse.IsSuccessStatusCode)
+                {
+                    Console.WriteLine(" Token wurde erfolgreich via Refresh erneuert.");
+                    var retryUserResponse = await Http.GetAsync("CoreService/me");
+                    if (retryUserResponse.IsSuccessStatusCode)
+                    {
+                        Nav.NavigateTo(returnUrl, true);
+                        return;
+                    }
+                }
             }
         }
         catch
         {
-            // Ignoriere Fehler und zeige Login
+            // Fehler ignorieren, Loginformular wird angezeigt
         }
     }
 

@@ -66,8 +66,8 @@ else
     {
         try
         {
-            _ipResults = await Http.GetFromJsonAsync<List<IpResultDto>>("/api/DataService/ipresults/by-user") ?? new();
-            _temperaturen = await Http.GetFromJsonAsync<List<TemperaturDto>>("/api/DataService/temperaturen/by-user") ?? new();
+            _ipResults = await Http.GetFromJsonAsync<List<IpResultDto>>("/DataService/ipresults/by-user") ?? new();
+            _temperaturen = await Http.GetFromJsonAsync<List<TemperaturDto>>("/DataService/temperaturen/by-user") ?? new();
         }
         catch (HttpRequestException ex)
         {
