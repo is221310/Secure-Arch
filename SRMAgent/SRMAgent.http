@@ -1,6 +1,0 @@
-@SRMAgent_HostAddress = http://localhost:5135
-
-GET {{SRMAgent_HostAddress}}/srmagent/
-Accept: application/json
-
-###

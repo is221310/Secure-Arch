@@ -6,89 +6,126 @@
 
 @if (_loading)
 {
-    <MudText>Loading data...</MudText>
+    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mt-6">Lade Daten...</MudText>
 }
-else if (_errorMessage is not null)
+else if (!string.IsNullOrEmpty(_errorMessage))
 {
-    <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
+    <MudAlert Severity="Severity.Error" Class="mt-4">@_errorMessage</MudAlert>
+}
+else if (_sensorGroups.Count == 0)
+{
+    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mt-6">Keine Sensordaten gefunden.</MudText>
 }
 else
 {
-    <MudText Typo="Typo.h4" GutterBottom="true">IP Results</MudText>
+    <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+        @foreach (var group in _sensorGroups)
+        {
+            <MudCard Class="mb-6">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h5">@group.SensorName</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTabs Rounded="true" Centered="true">
+                        <MudTabPanel Text="IP Status" Icon="@Icons.Material.Filled.Wifi">
+                            <MudTable Items="@group.IpResults" Hover="true" Bordered="true" Dense="true" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>IP-Adresse</MudTh>
+                                    <MudTh>Status</MudTh>
+                                    <MudTh>Zeit (lokal)</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd><code>@context.ip_address</code></MudTd>
+                                    <MudTd>
+                                        <MudText Color="@(context.result ? Color.Success : Color.Error)" Typo="Typo.body2" Bold="true">
+                                            @(context.result ? "Online" : "Offline")
+                                        </MudText>
+                                    </MudTd>
+                                    <MudTd>@context.timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudTabPanel>
 
-    <MudTable Items="_ipResults" Hover="true" Bordered="true" Dense="true">
-        <HeaderContent>
-            <MudTh>Sensor ID</MudTh>
-            <MudTh>IP Address</MudTh>
-            <MudTh>Result</MudTh>
-            <MudTh>Timestamp (UTC)</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>@context.sensor_id</MudTd>
-            <MudTd>@context.ip_address</MudTd>
-            <MudTd>@(context.result ? "True" : "False")</MudTd>
-            <MudTd>@context.timestamp.ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
-        </RowTemplate>
-    </MudTable>
-
-    <MudText Typo="Typo.h4" GutterBottom="true" Class="mt-6">Temperaturen</MudText>
-
-    <MudTable Items="_temperaturen" Hover="true" Bordered="true" Dense="true">
-        <HeaderContent>
-            <MudTh>ID</MudTh>
-            <MudTh>Sensor ID</MudTh>
-            <MudTh>Temperatur</MudTh>
-            <MudTh>Timestamp (UTC)</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>@context.id</MudTd>
-            <MudTd>@context.sensor_id</MudTd>
-            <MudTd>@context.temperatur</MudTd>
-            <MudTd>@context.timestamp.ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
-        </RowTemplate>
-    </MudTable>
+                        <MudTabPanel Text="Temperaturen" Icon="@Icons.Material.Filled.Thermostat">
+                            <MudTable Items="@group.Temperaturen" Hover="true" Bordered="true" Dense="true" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>Temperatur (°C)</MudTh>
+                                    <MudTh>Zeit (lokal)</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd>@context.temperatur.ToString("0.0")</MudTd>
+                                    <MudTd>@context.timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudTabPanel>
+                    </MudTabs>
+                </MudCardContent>
+            </MudCard>
+        }
+    </MudContainer>
 }
 
 @code {
     private bool _loading = true;
     private string? _errorMessage;
 
-    private List<IpResultDto> _ipResults = new();
-    private List<TemperaturDto> _temperaturen = new();
+    private List<SensorGroup> _sensorGroups = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         _loading = true;
-        _ = LoadDataAsync();
-    }
+        _errorMessage = null;
 
-    private async Task LoadDataAsync()
-    {
         try
         {
-            _ipResults = await Http.GetFromJsonAsync<List<IpResultDto>>("/api/DataService/ipresults/by-user") ?? new();
-            _temperaturen = await Http.GetFromJsonAsync<List<TemperaturDto>>("/api/DataService/temperaturen/by-user") ?? new();
+            // Hole IP Results und Temperaturen für den aktuellen User
+            var ipResults = await Http.GetFromJsonAsync<List<IpResultDto>>("DataService/ipresults/by-user") ?? new();
+            var temperaturen = await Http.GetFromJsonAsync<List<TemperaturDto>>("DataService/temperaturen/by-user") ?? new();
+
+            // Gruppieren nach Sensor ID + Sensor Name (SensorName im DTO angenommen)
+            var sensorIds = ipResults.Select(i => (i.sensor_id, i.sensor_name))
+                .Union(temperaturen.Select(t => (t.sensor_id, t.sensor_name)))
+                .Distinct()
+                .ToList();
+
+            _sensorGroups = sensorIds.Select(sid => new SensorGroup
+                {
+                    SensorId = sid.sensor_id,
+                    SensorName = sid.sensor_name,
+                    IpResults = ipResults.Where(i => i.sensor_id == sid.sensor_id).OrderByDescending(i => i.timestamp).ToList(),
+                    Temperaturen = temperaturen.Where(t => t.sensor_id == sid.sensor_id).OrderByDescending(t => t.timestamp).ToList()
+                }).ToList();
         }
         catch (HttpRequestException ex)
         {
             if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
                 NavigationManager.NavigateTo("/login", true);
-                return;
             }
-            _errorMessage = "Fehler beim Laden der Daten.";
+            else
+            {
+                _errorMessage = "Fehler beim Laden der Daten.";
+            }
         }
         finally
         {
             _loading = false;
-            StateHasChanged(); 
         }
+    }
+
+    private class SensorGroup
+    {
+        public int SensorId { get; set; }
+        public string SensorName { get; set; } = string.Empty;
+        public List<IpResultDto> IpResults { get; set; } = new();
+        public List<TemperaturDto> Temperaturen { get; set; } = new();
     }
 
     public class IpResultDto
     {
         public int id { get; set; }
         public int sensor_id { get; set; }
+        public string sensor_name { get; set; } = "";
         public string ip_address { get; set; } = "";
         public bool result { get; set; }
         public DateTime timestamp { get; set; }
@@ -98,6 +135,7 @@ else
     {
         public int id { get; set; }
         public int sensor_id { get; set; }
+        public string sensor_name { get; set; } = "";
         public double temperatur { get; set; }
         public DateTime timestamp { get; set; }
     }

@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SecureArchCore.Models;
+using SecureArchCore.Helper;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace SecureArchCore.Controllers
@@ -17,6 +19,19 @@ namespace SecureArchCore.Controllers
             _context = context;
         }
 
+        public class SensorAssignmentDto
+        {
+            public int sensor_id { get; set; }
+            public int? kunden_id { get; set; }
+        }
+
+        public class SecretDto
+        {
+            public string Secret { get; set; } = string.Empty;
+        }
+
+
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -24,6 +39,8 @@ namespace SecureArchCore.Controllers
             return Ok(sensoren);
         }
 
+
+        [Authorize(Roles = "Admin")]
         [HttpGet("withCustomers")]
         public async Task<IActionResult> GetAllWithCustomers()
         {
@@ -34,29 +51,23 @@ namespace SecureArchCore.Controllers
             return Ok(sensoren);
         }
 
-        public static class PasswordHasher
-        {
-            public static string Hash(string input) => BCrypt.Net.BCrypt.HashPassword(input);
-        }
+
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Sensor neuerSensor)
         {
             if (string.IsNullOrWhiteSpace(neuerSensor.sensor_name))
                 return BadRequest("Sensorname darf nicht leer sein.");
 
-            // Zeitstempel setzen, falls leer
             neuerSensor.created_at = DateTime.UtcNow;
 
-            // Secret nur hashen, wenn vorhanden
             if (!string.IsNullOrWhiteSpace(neuerSensor.secret_key))
             {
                 neuerSensor.secret_key = PasswordHasher.Hash(neuerSensor.secret_key);
             }
 
-            // IP-Liste initialisieren, falls null
             neuerSensor.ip_addresses ??= new List<string>();
 
-            // In Datenbank speichern
             _context.Sensoren.Add(neuerSensor);
             await _context.SaveChangesAsync();
 
@@ -68,11 +79,8 @@ namespace SecureArchCore.Controllers
         }
 
 
-        public class SecretDto
-        {
-            public string Secret { get; set; } = string.Empty;
-        }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("{id}/set-secret")]
         public async Task<IActionResult> SetSecret(int id, [FromBody] SecretDto dto)
         {
@@ -90,6 +98,9 @@ namespace SecureArchCore.Controllers
             return Ok(new { message = "Secret Key erfolgreich gesetzt" });
         }
 
+
+
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] Sensor sensorUpdate)
         {
@@ -109,7 +120,6 @@ namespace SecureArchCore.Controllers
             sensorInDb.kunden_id = sensorUpdate.kunden_id;
             sensorInDb.ip_addresses = sensorUpdate.ip_addresses ?? new List<string>();
 
-            // Falls ein neues secret_key übergeben wurde, wird es gehasht
             if (!string.IsNullOrWhiteSpace(sensorUpdate.secret_key))
             {
                 sensorInDb.secret_key = PasswordHasher.Hash(sensorUpdate.secret_key);
@@ -121,6 +131,7 @@ namespace SecureArchCore.Controllers
         }
 
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{sensor_id:int}")]
         public async Task<IActionResult> Delete(int sensor_id)
         {
@@ -134,6 +145,9 @@ namespace SecureArchCore.Controllers
             return NoContent();
         }
 
+
+
+        [Authorize(Roles = "Admin")]
         [HttpPut("{sensorId}/assign/{kundenId}")]
         public async Task<IActionResult> AssignSensorToKunde(int sensorId, int kundenId)
         {
@@ -149,6 +163,8 @@ namespace SecureArchCore.Controllers
             return NoContent();
         }
 
+
+        [Authorize(Roles = "Admin")]
         [HttpPost("assignments")]
         public async Task<IActionResult> SaveAssignments([FromBody] List<SensorAssignmentDto> assignments)
         {
@@ -164,10 +180,6 @@ namespace SecureArchCore.Controllers
             return Ok();
         }
 
-        public class SensorAssignmentDto
-        {
-            public int sensor_id { get; set; }
-            public int? kunden_id { get; set; }
-        }
+  
     }
 }

@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 [ApiController]
 [Route("DataService")]
@@ -15,6 +16,7 @@ public class DoorAlarmController : ControllerBase
         _context = context;
     }
 
+    [Authorize]
     [HttpPost("door_alarm")]
     public async Task<IActionResult> DoorAlarm([FromBody] DoorAlarmRequest request)
     {
