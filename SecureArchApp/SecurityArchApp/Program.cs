@@ -28,7 +28,6 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorClient", policy =>
     {
-//TODO das changen!!
         policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
     });
 });
