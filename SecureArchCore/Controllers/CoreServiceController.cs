@@ -200,6 +200,59 @@ public class CoreServiceController : ControllerBase
     }
 
     [HttpPost]
+    [Route("refreshsensor")]
+    public async Task<IActionResult> RefreshSensor()
+    {
+        var baseUrl = Environment.GetEnvironmentVariable("AUTH_API_BASE_URL");
+        if (string.IsNullOrEmpty(baseUrl))
+            return StatusCode(500, "AUTH_API_BASE_URL nicht gesetzt.");
+
+        var username = User.Claims.FirstOrDefault(c =>
+            c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
+        if (string.IsNullOrEmpty(username))
+            return Unauthorized("Benutzername konnte nicht aus dem Token gelesen werden.");
+
+        var refreshToken = Request.Cookies["refresh-token"];
+        if (string.IsNullOrEmpty(refreshToken))
+            return Unauthorized("Kein Refresh-Token im Cookie gefunden.");
+
+        var apiUrl = $"{baseUrl.TrimEnd('/')}/auth/token/sensor/refresh";
+
+        var response = await _httpClient.PostAsJsonAsync(apiUrl, new
+        {
+            username = username,
+            refresh_token = refreshToken
+        });
+
+        if (!response.IsSuccessStatusCode)
+            return StatusCode((int)response.StatusCode, "Token-Refresh fehlgeschlagen.");
+
+        var jsonString = await response.Content.ReadAsStringAsync();
+        using var jsonDoc = JsonDocument.Parse(jsonString);
+        var root = jsonDoc.RootElement;
+
+        if (root.TryGetProperty("access_token", out var accessTokenElement))
+        {
+            var accessToken = accessTokenElement.GetString();
+
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTimeOffset.UtcNow.AddDays(1)
+            };
+
+            Response.Cookies.Append("auth-token", accessToken, cookieOptions);
+            return Ok();
+        }
+
+        return BadRequest("Neuer Token konnte nicht extrahiert werden.");
+    }
+
+
+    [HttpPost]
     [Route("loginsensor")]
     public async Task<IActionResult> LoginSensor([FromBody] LoginRequest loginRequest)
     {
