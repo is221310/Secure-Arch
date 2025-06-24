@@ -16,8 +16,41 @@ namespace SecureArchCore.Controllers
                 _context = context;
             }
 
+        public class TemperaturCreateDto
+        {
+            public double Temperatur { get; set; }
+            public DateTime Timestamp { get; set; } = default;
+        }
 
-            [HttpGet("getConfig/{sensorName}")]
+        public class TemperaturDto
+        {
+            public int id { get; set; }
+            public int sensor_id { get; set; }
+            public string sensor_name { get; set; } = string.Empty;
+            public double temperatur { get; set; }
+            public DateTime timestamp { get; set; }
+        }
+
+        public class IpResultDto
+        {
+            public int id { get; set; }
+            public int sensor_id { get; set; }
+            public string sensor_name { get; set; } = string.Empty;
+            public string ip_address { get; set; } = string.Empty;
+            public bool result { get; set; }
+            public DateTime timestamp { get; set; }
+        }
+
+        public class IpResultCreateDto
+        {
+            public int sensor_id { get; set; }
+            public string ip_address { get; set; } = string.Empty;
+            public bool status { get; set; }
+        }
+
+
+
+        [HttpGet("getConfig/{sensorName}")]
             public async Task<IActionResult> GetConfig(string sensorName)
             {
                 var sensor = await _context.Sensoren
@@ -29,7 +62,7 @@ namespace SecureArchCore.Controllers
                 var ipList = sensor.ip_addresses ?? new List<string>();
                 return Ok(ipList);
             }
-
+        
             [HttpGet("temperatur")]
             public async Task<IActionResult> GetAllTemperaturen()
             {
@@ -52,14 +85,7 @@ namespace SecureArchCore.Controllers
                 return Ok(daten);
             }
 
-        public class TemperaturDto
-        {
-            public int id { get; set; }
-            public int sensor_id { get; set; }
-            public string sensor_name { get; set; } = string.Empty;
-            public double temperatur { get; set; }
-            public DateTime timestamp { get; set; }
-        }
+
 
         [HttpGet("temperaturen/by-user/")]
         [Authorize]
@@ -100,13 +126,6 @@ namespace SecureArchCore.Controllers
                 .ToListAsync();
 
             return Ok(temperaturen);
-        }
-
-
-        public class TemperaturCreateDto
-        {
-            public double Temperatur { get; set; }
-            public DateTime Timestamp { get; set; } = default;
         }
 
 
@@ -161,24 +180,6 @@ namespace SecureArchCore.Controllers
             }
 
 
-        public class IpResultCreateByNameDto
-        {
-            public string sensor_name { get; set; } = string.Empty;
-            public string ip_address { get; set; } = string.Empty;
-            public bool status { get; set; }
-            public DateTime timestamp { get; set; } = DateTime.UtcNow;
-        }
-
-        public class IpResultDto
-        {
-            public int id { get; set; }
-            public int sensor_id { get; set; }
-            public string sensor_name { get; set; } = string.Empty;
-            public string ip_address { get; set; } = string.Empty;
-            public bool result { get; set; }
-            public DateTime timestamp { get; set; }
-        }
-
         [Authorize]
         [HttpGet("ipresults/by-user/")]
         public async Task<IActionResult> GetIpResultsByUsername()
@@ -222,12 +223,6 @@ namespace SecureArchCore.Controllers
         }
 
 
-        public class IpResultCreateDto
-        {
-            public int sensor_id { get; set; }
-            public string ip_address { get; set; } = string.Empty;
-            public bool status { get; set; }
-        }
 
     }
 }

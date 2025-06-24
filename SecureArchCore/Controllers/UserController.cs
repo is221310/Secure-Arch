@@ -16,8 +16,18 @@ namespace SecureArchCore.Controllers
         {
             _context = context;
         }
+        public class UserCreateDto
+        {
+            public string firstname { get; set; } = string.Empty;
+            public string lastname { get; set; } = string.Empty;
+            public string email { get; set; } = string.Empty;
+            public string password { get; set; } = string.Empty;
+            public string telephone { get; set; } = string.Empty;
+            public string role { get; set; } = string.Empty;
+            public string address { get; set; } = string.Empty;
+            public int? kunden_id { get; set; }
+        }
 
-        
         [HttpGet]
         public async Task<ActionResult<List<User>>> GetAllWithCustomers()
         {
@@ -64,17 +74,7 @@ namespace SecureArchCore.Controllers
             return Ok(user);
         }
 
-        public class UserCreateDto
-        {
-            public string firstname { get; set; } = string.Empty;
-            public string lastname { get; set; } = string.Empty;
-            public string email { get; set; } = string.Empty;
-            public string password { get; set; } = string.Empty;
-            public string telephone { get; set; } = string.Empty;
-            public string role { get; set; } = string.Empty;
-            public string address { get; set; } = string.Empty;
-            public int? kunden_id { get; set; }
-        }
+
 
         [HttpPost]
         public async Task<IActionResult> RegisterUser([FromBody] UserCreateDto dto)

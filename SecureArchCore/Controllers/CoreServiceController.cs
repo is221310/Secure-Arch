@@ -20,8 +20,6 @@ public class CoreServiceController : ControllerBase
         _httpClient = httpClientFactory.CreateClient();
     }
    
-
-
     public class LoginRequest
     {
         public string Username { get; set; }
@@ -43,14 +41,12 @@ public class CoreServiceController : ControllerBase
     [Authorize]
     public IActionResult GetRole()
     {
-     
-
         var roleClaim = User.Claims.FirstOrDefault(c =>
             c.Type == "role" ||
             c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role");
 
         if (roleClaim == null)
-            return NotFound("Role claim not found.");
+            return NotFound("Rollenclaim nicht gefunden.");
 
         return Ok(new { Role = roleClaim.Value });
     }
@@ -298,9 +294,6 @@ public class CoreServiceController : ControllerBase
         return BadRequest("Token konnte nicht extrahiert werden.");
     }
 
-
-
-
     [HttpPost("logout")]
     public IActionResult Logout()
     {
@@ -319,8 +312,6 @@ public class CoreServiceController : ControllerBase
             Secure = true,
             SameSite = SameSiteMode.None
         });
-
-
 
         return Ok();
     }
