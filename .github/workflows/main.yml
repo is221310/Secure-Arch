@@ -1,0 +1,90 @@
+name: CI Build and Push
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies (Python)
+        run: |
+          pip install -r SRMAuth/requirements.txt
+          pip install pytest  # or whatever you use
+      
+      - name: Run Python unit tests
+        run: |
+          export PYTHONPATH=SRMAuth
+          python -m tests.test_core_jwt_auth
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'  # adjust as needed
+
+      - name: Install .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      
+      - name: Run C# unit tests
+        run: |
+          dotnet test TestSecureArchApp/TestSecureArchApp.csproj
+          dotnet test TestSecureArchAppClient/TestSecureArchAppClient.csproj
+          dotnet test TestSecureArchCore/TestSecureArchCore.csproj
+
+#      - name: Generate .env file from secrets
+#       run: |
+#        echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env
+#       echo "Decode_Response=${{ secrets.Decode_Response }}" >> .env
+#          echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
+#          echo "JWT_ALGORITHM=${{ secrets.JWT_ALGORITHM }}" >> .env
+#          echo "JWT_EXPIRATION_TIME=${{ secrets.JWT_EXPIRATION_TIME }}" >> .env
+#          echo "JWT_REFRESH_EXPIRATION_TIME=${{ secrets.JWT_REFRESH_EXPIRATION_TIME }}" >> .env
+#          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+#          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+#          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+
+      - name: Build and push App image
+        run: |
+          docker build -t ghcr.io/is221310/secure-arch-auth-api:latest ./SRMAuth
+          docker push ghcr.io/is221310/secure-arch-auth-api:latest
+
+      - name: Build and push Redis image (custom)
+        run: |
+          docker build -t ghcr.io/is221310/secure-arch-redis:latest ./SRMAuth/redis
+          docker push ghcr.io/is221310/secure-arch-redis:latest
+
+      - name: Build and push PostgreSQL image (custom)
+        run: |
+          docker build -t ghcr.io/is221310/secure-arch-postgres:latest ./ContainerServices/databasePostgres
+          docker push ghcr.io/is221310/secure-arch-postgres:latest
+          
+      - name: Build and push Core API image
+        run: |
+          docker build -t ghcr.io/is221310/secure-arch-core-api:latest ./SecureArchCore
+          docker push ghcr.io/is221310/secure-arch-core-api:latest
