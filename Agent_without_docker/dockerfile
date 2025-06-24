@@ -1,0 +1,21 @@
+# Basis-Image (optimiert für Raspberry Pi)
+FROM python:3.9-slim-bullseye
+
+# System-Ping installieren (für Linux-Ping)
+RUN apt-get update && apt-get install -y \
+    iputils-ping \
+    && rm -rf /var/lib/apt/lists/*
+
+# Arbeitsverzeichnis erstellen
+WORKDIR /app
+
+# Python-Abhängigkeiten installieren
+COPY app/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Code kopieren
+COPY app/agent.py .
+COPY config/.env .
+
+# Startbefehl
+CMD ["python", "agent.py"]
