@@ -72,21 +72,6 @@ jobs:
       - name: Build and push App image
         run: |
           docker build -t ghcr.io/is221310/secure-arch-auth-api:latest \
-            --build-arg JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
-            --build-arg JWT_ALGORITHM=${{ secrets.JWT_ALGORITHM }} \
-            --build-arg JWT_EXPIRATION_TIME=${{ secrets.JWT_EXPIRATION_TIME }} \
-            --build-arg JWT_REFRESH_EXPIRATION_TIME=${{ secrets.JWT_REFRESH_EXPIRATION_TIME }} \
-            --build-arg REDIS_HOST=${{ secrets.REDIS_HOST }} \
-            --build-arg REDIS_PORT=${{ secrets.REDIS_PORT }} \
-            --build-arg REDIS_DB=${{ secrets.REDIS_DB }} \
-            --build-arg REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }} \
-            --build-arg DECODE_RESPONSE=${{ secrets.DECODE_RESPONSE }} \
-            --build-arg POSTGRES_HOST=${{ secrets.POSTGRES_HOST }} \
-            --build-arg POSTGRES_PORT=${{ secrets.POSTGRES_PORT }} \
-            --build-arg POSTGRES_DB=${{ secrets.POSTGRES_DB }} \
-            --build-arg POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
-            --build-arg POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
-            --build-arg POSTGRES_SCHEMA=${{ secrets.POSTGRES_SCHEMA }} \
             ./SRMAuth
           docker push ghcr.io/is221310/secure-arch-auth-api:latest
 
