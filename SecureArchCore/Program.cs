@@ -52,7 +52,7 @@ public class Program
         {
             options.AddPolicy("AllowBlazorClient", policy =>
             {
-                policy.WithOrigins(blazorClientUrl ?? "https://localhost:7255")
+                policy.WithOrigins(blazorClientUrl ?? "http://localhost:8080")
                       .AllowAnyHeader()
                       .AllowAnyMethod()
                       .AllowCredentials();

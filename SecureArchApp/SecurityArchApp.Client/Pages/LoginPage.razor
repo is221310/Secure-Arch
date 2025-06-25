@@ -68,7 +68,7 @@
         Message = "";
         var loginRequest = new { Username, Password };
 
-        var response = await Http.PostAsJsonAsync("https://localhost:7254/CoreService/login", loginRequest);
+        var response = await Http.PostAsJsonAsync("CoreService/login", loginRequest);
         if (response.IsSuccessStatusCode)
         {
             Message = "Login erfolgreich!";
