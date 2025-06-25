@@ -2,6 +2,7 @@
 using SecureArchCore.Controllers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using SecureArchCore.Models;
 
 namespace TestSecureArchCore
 {
