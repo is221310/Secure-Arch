@@ -36,10 +36,10 @@ jobs:
           pip install -r SRMAuth/requirements.txt
           pip install pytest  # or whatever you use
       
-#      - name: Run Python unit tests
-#        run: |
-#          export PYTHONPATH=SRMAuth
-#          python -m tests.test_core_jwt_auth
+      - name: Run Python unit tests
+        run: |
+          export PYTHONPATH=SRMAuth
+          python -m tests.test_core_jwt_auth
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
@@ -51,23 +51,13 @@ jobs:
         with:
           dotnet-version: '9.0.x'
       
-#      - name: Run C# unit tests
-#        run: |
-#         dotnet test TestSecureArchApp/TestSecureArchApp.csproj
-#          dotnet test TestSecureArchAppClient/TestSecureArchAppClient.csproj
-#          dotnet test TestSecureArchCore/TestSecureArchCore.csproj
+      - name: Run C# unit tests
+        run: |
+         dotnet test TestSecureArchApp/TestSecureArchApp.csproj
+         dotnet test TestSecureArchAppClient/TestSecureArchAppClient.csproj
+         dotnet test TestSecureArchCore/TestSecureArchCore.csproj
 
-#      - name: Generate .env file from secrets
-#       run: |
-#        echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env
-#       echo "Decode_Response=${{ secrets.Decode_Response }}" >> .env
-#          echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
-#          echo "JWT_ALGORITHM=${{ secrets.JWT_ALGORITHM }}" >> .env
-#          echo "JWT_EXPIRATION_TIME=${{ secrets.JWT_EXPIRATION_TIME }}" >> .env
-#          echo "JWT_REFRESH_EXPIRATION_TIME=${{ secrets.JWT_REFRESH_EXPIRATION_TIME }}" >> .env
-#          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
-#          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-#          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+
 
       - name: Build and push App image
         run: |
