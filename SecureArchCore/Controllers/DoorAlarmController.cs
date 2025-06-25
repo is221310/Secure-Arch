@@ -4,7 +4,6 @@ using System.Text.Json;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
-
 [ApiController]
 [Route("DataService")]
 public class DoorAlarmController : ControllerBase
@@ -23,13 +22,12 @@ public class DoorAlarmController : ControllerBase
         if (request == null || request.door_opened?.ToLower() != "true")
             return BadRequest("Kein gültiges Tür-Alarm-Event.");
 
-        // Sensorname aus dem 'sub'-Claim holen
-        var sensorName = User.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+        var sensorName = User.Claims
+            .FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
 
         if (string.IsNullOrWhiteSpace(sensorName))
             return Unauthorized("Sensorname nicht im Token enthalten (sub-Claim).");
 
-        // Sensor + zugehörigen Kunden aus der DB holen
         var sensor = await _context.Sensoren
             .Include(s => s.Kunde)
             .FirstOrDefaultAsync(s => s.sensor_name == sensorName);
@@ -40,42 +38,63 @@ public class DoorAlarmController : ControllerBase
         if (sensor.Kunde == null)
             return NotFound("Sensor ist keinem Kunden zugeordnet.");
 
-        // Customer ID für Zammad: z. B. Kunden-E-Mail oder Firmenname
-        var customerId = sensor.Kunde.kunden_name ?? sensor.Kunde.kunden_name ?? "unbekannt";
+        var kundenId = sensor.kunden_id;
 
-        // Payload für Zammad-Ticket
-        var zammadPayload = new
-        {
-            title = "Türalarm ausgelöst",
-            group = "Users",
-            customer_id = "1",
-            article = new
-            {
-                subject = "Tür geöffnet",
-                body = $"Der Sensor '{sensorName}' hat einen Türalarm gemeldet.",
-                type = "email",
-                @internal = false  // @ für C#-Schlüsselwort "internal"
-            }
-        };
+        // Hole alle Benutzer mit diesem Kunden
+        var users = await _context.Users
+            .Where(u => u.kunden_id == kundenId && !string.IsNullOrEmpty(u.email))
+            .ToListAsync();
 
-        var json = JsonSerializer.Serialize(zammadPayload);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        if (users.Count == 0)
+            return NotFound("Keine Benutzer mit passender Kunden-ID gefunden.");
+
+        // Zammad API-Daten
+        var zammadBaseUrl = Environment.GetEnvironmentVariable("ZAMMAD_API_URL") ?? "http://localhost:8081";
+        var zammadUsername = Environment.GetEnvironmentVariable("ZAMMAD_USERNAME") ?? "nicole.braun@zammad.org";
+        var zammadPassword = Environment.GetEnvironmentVariable("ZAMMAD_PASSWORD") ?? "12345";
+
+        var errors = new List<string>();
 
         using var httpClient = new HttpClient();
-        var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes("nicole.braun@zammad.org:12345"));
+        var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{zammadUsername}:{zammadPassword}"));
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
 
-        var zammadApiUrl = "http://localhost:8081/api/v1/tickets";
-        var response = await httpClient.PostAsync(zammadApiUrl, content);
+        foreach (var user in users)
+        {
+            var zammadPayload = new
+            {
+                title = "Türalarm ausgelöst",
+                group = "Users",
+                customer = user.email,
+                article = new
+                {
+                    subject = "Tür geöffnet",
+                    body = $"Der Sensor '{sensorName}' hat einen Türalarm gemeldet.",
+                    type = "note",
+                    @internal = false
+                }
+            };
 
-        if (response.IsSuccessStatusCode)
-            return Ok("Ticket erfolgreich erstellt.");
+            var json = JsonSerializer.Serialize(zammadPayload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var error = await response.Content.ReadAsStringAsync();
-        return StatusCode((int)response.StatusCode, $"Fehler bei Ticket-Erstellung: {error}");
+            var response = await httpClient.PostAsync($"{zammadBaseUrl}/api/v1/tickets", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorText = await response.Content.ReadAsStringAsync();
+                errors.Add($"Fehler für {user.email}: {errorText}");
+            }
+        }
+
+        if (errors.Any())
+            return StatusCode(500, $"Einige Tickets konnten nicht erstellt werden:\n{string.Join("\n", errors)}");
+
+        return Ok("Tickets für alle Benutzer erfolgreich erstellt.");
     }
 
-public class DoorAlarmRequest
+
+    public class DoorAlarmRequest
     {
         public string? door_opened { get; set; }
     }
