@@ -2,14 +2,13 @@
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
-using Blazored.LocalStorage;
-using SecureArchApp.Client.Services;
+
+
 using SecureArchApp.Client;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 builder.Services.AddMudServices();
-builder.Services.AddTransient<AuthorizationMessageHandler>();
 builder.Services.AddTransient<CredentialsHandler>();
 
 
