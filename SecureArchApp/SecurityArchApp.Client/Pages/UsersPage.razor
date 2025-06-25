@@ -36,8 +36,12 @@
                 }
             </MudSelect>
 
-            <MudTextField @bind-Value="_bearbeiteUser.role" Label="Rolle" Required="true" />
-
+            <MudSelect @bind-Value="_bearbeiteUser.role" Label="Rolle" Required="true" Class="mt-3">
+                @foreach (var rolle in rollen)
+                {
+                    <MudSelectItem Value="@rolle">@rolle</MudSelectItem>
+                }
+            </MudSelect>
             <MudButton Color="Color.Primary" OnClick="SpeichernUser" Class="mt-3">Speichern</MudButton>
             <MudButton Color="Color.Secondary" OnClick="CloseForm" Class="mt-3 ml-2">Abbrechen</MudButton>
         </MudPaper>
@@ -76,7 +80,12 @@
 
     private User _bearbeiteUser = new();
     private bool _formularSichtbar = false;
-
+    private readonly List<string> rollen = new()
+{
+    "Admin",
+    "Mitarbeiter",
+    "Kunde"
+};
     protected override async Task OnInitializedAsync()
     {
         await LadeUser();
