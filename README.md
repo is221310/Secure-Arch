@@ -121,9 +121,13 @@ Zugriff:
 
 ### Agent (z. B. auf Raspberry Pi)
 
+Mosquitto MQTT-Broker auf Raspberry PI OS installiert. Ein Python Script übernimmt die Auswertung und das pushen an die Webapp.
+Shelly Device verbindet sich inkl. MQTT Auth zum Broker.
+Broker und Agent (Script) wird in Docker Compose containerisiert.
+
 ```bash
 cd agent
-dotnet run
+docker compose up -d
 # Oder als Service einrichten
 ```
 
