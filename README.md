@@ -98,13 +98,13 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
 
 ## 🏗️ Systemarchitektur
 
-![Systemarchitektur](./assets/asystemarchitektur.png)
+![Systemarchitektur](assets/systemarchitektur.png)
 
 ---
 
 ## 📊 ER-Diagramm
 
-![ER-Diagramm](./docs/er-diagramm.png)
+![ER-Diagramm](assets/ER_Diagram.png)
 
 ---
 
