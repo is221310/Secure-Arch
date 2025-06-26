@@ -1,13 +1,21 @@
 ﻿@page "/logout"
 @inject HttpClient Http
-@inject NavigationManager Navigation
+
 
 <MudText>Logging out...</MudText>
 
 @code {
     protected override async Task OnInitializedAsync()
     {
-        var response = await Http.PostAsync("CoreService/logout", null);
- 
+        try
+        {
+            var response = await Http.PostAsync("CoreService/logout", null);
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fehler beim Logout: {ex.Message}");
+       
+        }
     }
 }
