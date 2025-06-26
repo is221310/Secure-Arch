@@ -1,6 +1,7 @@
 ﻿@page "/"
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
+@inject IConfiguration Configuration
 @using System.Net.Http.Json
 
 <PageTitle>Home</PageTitle>
@@ -29,14 +30,13 @@
             Willkommen bei SecureArch
         </MudText>
 
-        <!-- Link-Bereich horizontal nebeneinander -->
         <MudStack Direction="Row" Spacing="6" Class="mb-6">
             <MudLink Href="/admin" Color="Color.Primary" Class="d-flex align-center" Style="text-decoration:none;">
                 <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Size="Size.Large" Class="me-1" />
                 <span>Admin</span>
             </MudLink>
-            <!--in production would be public domain ;) -->
-            <MudLink Href="https://localhost:8081/" Color="Color.Primary" Target="_blank" Rel="noopener noreferrer" Class="d-flex align-center" Style="text-decoration:none;"> /
+
+            <MudLink Href="@_ticketServiceUrl" Color="Color.Primary" Target="_blank" Rel="noopener noreferrer" Class="d-flex align-center" Style="text-decoration:none;">
                 <MudIcon Icon="@Icons.Material.Filled.ConfirmationNumber" Size="Size.Large" Class="me-1" />
                 <span>Ticket Service</span>
             </MudLink>
@@ -50,6 +50,7 @@
 
     @code {
     private string? _username;
+    private string? _ticketServiceUrl;
     private bool _loading = true;
     private bool _hasLoaded = false;
 
@@ -58,6 +59,10 @@
         if (firstRender && !_hasLoaded)
         {
             _hasLoaded = true;
+
+            // Konfigurationswerte laden
+            _ticketServiceUrl = Configuration["TicketServiceUrl"];
+
             await LoadUserInfo();
             StateHasChanged();
         }
@@ -73,6 +78,7 @@
                 NavigationManager.NavigateTo("/login", true);
                 return;
             }
+
             _username = userInfo.Username;
         }
         catch (HttpRequestException ex)

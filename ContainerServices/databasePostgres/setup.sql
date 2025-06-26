@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS sensoren (
     sensor_id SERIAL PRIMARY KEY,
     sensor_name VARCHAR(255) NOT NULL,
-    secret_key VARCHAR(255) NOT NULL,
+    secret_key VARCHAR(255),
     beschreibung TEXT,      
     kunden_id INT,
     ip_addresses JSONB  DEFAULT '[]',

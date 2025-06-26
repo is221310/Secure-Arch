@@ -142,35 +142,58 @@
 
         if (_bearbeiteSensor.sensor_id == 0)
         {
+            // Sensor anlegen
             response = await Http.PostAsJsonAsync("api/sensor", _bearbeiteSensor);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Neuen Sensor mit ID laden
+                var createdSensor = await response.Content.ReadFromJsonAsync<Sensor>();
+                if (createdSensor != null && !string.IsNullOrWhiteSpace(_secretKey))
+                {
+                    // Secret setzen
+                    var secretResponse = await Http.PostAsJsonAsync(
+                        $"api/sensor/{createdSensor.sensor_id}/set-secret",
+                        new { secret = _secretKey });
+
+                    if (!secretResponse.IsSuccessStatusCode)
+                    {
+                        // Fehlerbehandlung (optional Snackbar/Dialog)
+                    }
+                }
+            }
         }
         else
         {
+            // Sensor aktualisieren
             response = await Http.PutAsJsonAsync($"api/sensor/{_bearbeiteSensor.sensor_id}", _bearbeiteSensor);
+
+            if (response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(_secretKey))
+            {
+                // Secret setzen
+                var secretResponse = await Http.PostAsJsonAsync(
+                    $"api/sensor/{_bearbeiteSensor.sensor_id}/set-secret",
+                    new { secret = _secretKey });
+
+                if (!secretResponse.IsSuccessStatusCode)
+                {
+                    // Fehlerbehandlung (optional)
+                }
+            }
         }
 
         if (response.IsSuccessStatusCode)
         {
-            if (!string.IsNullOrWhiteSpace(_secretKey))
-            {
-                // Nach dem Speichern das Secret setzen
-                var secretResponse = await Http.PostAsJsonAsync($"api/sensor/{_bearbeiteSensor.sensor_id}/set-secret", new { secret = _secretKey });
-
-                if (!secretResponse.IsSuccessStatusCode)
-                {
-                    // Optional: Fehler anzeigen
-                }
-            }
-
             _formularSichtbar = false;
             _secretKey = string.Empty;
             await LadeSensoren();
         }
         else
         {
-            // Optional: Fehleranzeige
+            // Optional: Fehleranzeige per Snackbar/Dialog
         }
     }
+
 
     private async Task DeleteSensor(int sensorId)
     {
