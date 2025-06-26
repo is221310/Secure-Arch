@@ -1,0 +1,43 @@
+name: MQTT Agent CI
+
+on:
+  push:
+    paths:
+      - 'app/**'
+      - 'config/**'
+      - 'docker-compose.yml'
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'config/**'
+      - 'docker-compose.yml'
+
+jobs:
+  build-mqtt-agent:
+    runs-on: ubuntu-latest
+    name: MQTT Agent Build & Test
+
+    steps:
+      - name: Repository klonen
+        uses: actions/checkout@v3
+
+      - name: Python einrichten
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Abhängigkeiten installieren
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r app/requirements.txt
+
+      - name: Python Syntax-Check
+        run: |
+          python -m py_compile app/shelly_door_v2.2.py
+
+      - name: Docker Build testen
+        run: |
+          docker build -t mqtt-agent ./app
+
+      - name: CI abgeschlossen
+        run: echo "MQTT Agent CI erfolgreich abgeschlossen"
