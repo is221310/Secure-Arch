@@ -98,7 +98,7 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
 
 ## 🏗️ Systemarchitektur
 
-![Systemarchitektur](./docs/architektur.png)
+![Systemarchitektur](./assets/asystemarchitektur.png)
 
 ---
 
