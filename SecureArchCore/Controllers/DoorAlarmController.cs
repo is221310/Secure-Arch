@@ -137,7 +137,7 @@ public class DoorAlarmController : ControllerBase
 
         Console.WriteLine("Tickets für alle Benutzer erfolgreich erstellt.");
         return Ok("Tickets für alle Benutzer erfolgreich erstellt.");
-
+    }
 
     public class DoorAlarmRequest
     {
