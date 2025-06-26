@@ -9,6 +9,11 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
 - [🔒 SecureArch](#-securearch)
   - [📚 Inhaltsverzeichnis](#-inhaltsverzeichnis)
   - [✨ Features](#-features)
+    - [🧩 Architekturkomponenten](#-architekturkomponenten)
+    - [🔐 Sicherheit \& Zugriff](#-sicherheit--zugriff)
+    - [📶 IoT-Funktionalität](#-iot-funktionalität)
+    - [🎫 Automatisierung \& Multitenancy](#-automatisierung--multitenancy)
+    - [⚙️ DevOps](#️-devops)
   - [🏗️ Systemarchitektur](#️-systemarchitektur)
   - [📊 ER-Diagramm](#-er-diagramm)
   - [🧱 Klassendiagramm](#-klassendiagramm)
@@ -34,25 +39,60 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
 
 ## ✨ Features
 
-- **Microservice-Architektur** mit RESTful APIs
-    - Agent (Appliance)
-    - Core-Service (Business-Logik & zentrale Datenhaltung)
-    - Token-Service (Security, Auth, NoSQL)
+### 🧩 Architekturkomponenten
+
+- **Microservice-Architektur** mit RESTful APIs:
+  - **Agent** (Appliance)
+  - **Core-Service** (Business-Logik & zentrale Datenhaltung)
+  - **Token-Service** (Security, Auth, NoSQL)
+
+📷 *Architekturübersicht:*  
+![Architekturdiagramm](./docs/architektur.png)
+
+---
+
+### 🔐 Sicherheit & Zugriff
+
 - **Token-basierte Sicherheit**
 - **Frontend (mit Blazor)** mit Benutzer-Rollen:
-    - **Kunde**: Einsicht in eigene Sensordaten
-    - **Admin**: Volle Konfiguration & Einsicht
+  - **Kunde**: Einsicht in eigene Sensordaten
+  - **Admin**: Volle Konfiguration & Einsicht
+
+📷 *Beispielhafte UI-Ansicht für Rollen:*  
+*➤ Screenshots der WebUI mit Kunden- und Adminsicht könnten hier eingefügt werden.*
+
+---
+
+### 📶 IoT-Funktionalität
+
 - **Shelly-Integration**: Konfiguration & Überwachung von:
-    - Türstatus (Event-basiert)
-    - Temperatur
-    - Helligkeit 
-    - Batteriestatus
+  - Türstatus (Event-basiert)
+  - Temperatur
+  - Helligkeit
+  - Batteriestatus
 - **Netzwerküberwachung** durch Agent:
-    - Pings an IP-Adressen, zentral definierbar über das Frontend
+  - Pings an IP-Adressen, zentral definierbar über das Frontend
 - **Agent → Core Kommunikation** über **HTTPS REST-API**
+
+📷 *Geräteintegration (z. B. MQTT, Shelly-Datenfluss):*  
+*➤ Diagramm zum Datenfluss zwischen Shelly, MQTT und Agent könnte hier ergänzt werden.*
+
+📷 *Kommunikation Agent ↔ Core inkl. Tokenfluss:*  
+*➤ Sequenzdiagramm zur API-Kommunikation mit Tokenhandling wäre hier hilfreich.*
+
+---
+
+### 🎫 Automatisierung & Multitenancy
+
 - **Automatische Ticket-Erstellung** bei sicherheitsrelevanten Vorfällen
 - **Mehrmandantenfähig**
-- **CI/CD Pipeline (GitHub Actions)**
+
+---
+
+### ⚙️ DevOps
+
+- **CI Pipeline** via GitHub Actions
+- Nutzung von GitHub Secrets und GitHub Container Registry
 
 ---
 
