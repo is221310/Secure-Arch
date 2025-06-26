@@ -16,7 +16,8 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
     - [⚙️ DevOps](#️-devops)
   - [🏗️ Systemarchitektur](#️-systemarchitektur)
   - [📊 ER-Diagramm](#-er-diagramm)
-  - [🧱 Klassendiagramm](#-klassendiagramm)
+  - [🧱 Klassendiagramme](#-klassendiagramme)
+    - [SecureArchCore](#securearchcore)
   - [📡 API-Dokumentation](#-api-dokumentation)
     - [Agent → Core](#agent--core)
     - [Frontend → Core](#frontend--core)
@@ -108,8 +109,9 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
 
 ---
 
-## 🧱 Klassendiagramm
+## 🧱 Klassendiagramme
 
+### SecureArchCore
 ![Klassendiagramm](./docs/klassendiagramm.png)
 
 ---
