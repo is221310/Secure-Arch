@@ -18,12 +18,17 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
     - [Core → Ticket-System](#core--ticket-system)
   - [⚙️ Installation \& Start](#️-installation--start)
     - [Voraussetzungen](#voraussetzungen)
-    - [Backend \& Frontend (lokal)](#backend--frontend-lokal)
+    - [🛠️ Lokale Ausführung: Core Webapp \& Auth-Service](#️-lokale-ausführung-core-webapp--auth-service)
+      - [1. Repository klonen](#1-repository-klonen)
+      - [2. Umgebungsvariablen setzen](#2-umgebungsvariablen-setzen)
+      - [3. Docker-Container starten](#3-docker-container-starten)
+    - [🌐 Lokale Ports \& Services](#-lokale-ports--services)
+    - [⚠️ Hinweis: Nur für Entwicklungs- und Demo-Zwecke](#️-hinweis-nur-für-entwicklungs--und-demo-zwecke)
     - [Agent (z. B. auf Raspberry Pi)](#agent-zb-auf-raspberry-pi)
-  - [Unit Tests](#unit-tests)
   - [👥 Teammitglieder](#-teammitglieder)
   - [📄 Lizenz](#-lizenz)
   - [📎 Anhang](#-anhang)
+
 
 ---
 
@@ -47,7 +52,7 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
 - **Agent → Core Kommunikation** über **HTTPS REST-API**
 - **Automatische Ticket-Erstellung** bei sicherheitsrelevanten Vorfällen
 - **Mehrmandantenfähig**
-- **CI Pipeline (GitHub Actions, Secrets, GitHub Container Registry)**
+- **CI/CD Pipeline (GitHub Actions)**
 
 ---
 
@@ -102,43 +107,70 @@ Alle Services bieten RESTful JSON-APIs. Beispiele:
 ### Voraussetzungen
 
 - Docker & Docker Compose
-- .NET 7 SDK
+- .NET 8 SDK
 - (Optional) Raspberry Pi + Shelly Device
 
-### Backend & Frontend (lokal)
+### 🛠️ Lokale Ausführung: Core Webapp & Auth-Service
+
+#### 1. Repository klonen
 
 ```bash
-git clone https://github.com/yourorg/monitoring-platform.git
-cd monitoring-platform
-docker-compose up --build
+git clone https://github.com/is221310/Secure-Arch.git
+cd Secure-Arch
 ```
 
-Zugriff:
-- Frontend: http://localhost:5000
-- API Core: http://localhost:5001/api
-- Token-Service: http://localhost:5002
-- PostgreSQL, etc. auf eigenen Docker-Netzwerken
+#### 2. Umgebungsvariablen setzen
 
-### Agent (z. B. auf Raspberry Pi)
-
-Mosquitto MQTT-Broker auf Raspberry PI OS installiert. Ein Python Script übernimmt die Auswertung und das pushen an die Webapp.
-Shelly Device verbindet sich inkl. MQTT Auth zum Broker.
-Broker und Agent (Script) wird in Docker Compose containerisiert.
+Kopiere die Beispieldatei `.env.dist` zu `.env`, um die nötigen Umgebungsvariablen bereitzustellen:
 
 ```bash
-cd agent
-docker compose up -d
-# Oder als Service einrichten
+cp .env.dist .env
+```
+
+#### 3. Docker-Container starten
+
+```bash
+docker-compose up --build
 ```
 
 ---
 
-## Unit Tests
+### 🌐 Lokale Ports & Services
 
-- ? 4 test classes were created to test parts of the components SecureArchApp, SecureArchAppClient, SecureArchCore and SRMAuth
-- the tests cover c# and python code
-- the backend SecureArchCore has the highest test coverage
-- ? integration of unit tests into the CI pipeline
+| Service          | Beschreibung               | Port (lokal)            |
+| ---------------- | -------------------------- | ----------------------- |
+| **Frontend**     | Blazor WebApp UI           | `http://localhost:8080` |
+| **Core-Service** | Zentrale Logik & REST-API  | `http://localhost:5236` |
+| **Auth-Service** | Authentifizierung & Tokens | `http://localhost:8000` |
+| **PostgreSQL**   | Datenbank                  | `localhost:5432`        |
+| **Redis**        | Cache / PubSub für Tokens  | `localhost:6379`        |
+
+> 💡 Diese Ports sind in der `docker-compose.yml` definiert und können bei Bedarf angepasst werden.
+
+---
+
+### ⚠️ Hinweis: Nur für Entwicklungs- und Demo-Zwecke
+
+Dieses Setup ist **nicht für die Produktion geeignet**.\
+Es fehlen unter anderem:
+
+- Sichere Authentifizierung (TLS, Secrets)
+- Rate-Limiting, Monitoring
+- Sicherheitsrichtlinien (z. B. Auth für Redis)
+- Backups & persistente Volumes außerhalb Docker
+
+🔒 Nutze dieses Setup **nur lokal oder in geschlossenen Testumgebungen**!
+
+  
+---
+
+### Agent (z. B. auf Raspberry Pi)
+Mosquitto MQTT-Broker auf Raspberry PI OS installiert. Ein Python Script übernimmt die Auswertung und das pushen an die Webapp. Shelly Device verbindet sich inkl. MQTT Auth zum Broker. Broker und Agent (Script) wird in Docker Compose containerisiert.
+
+```bash
+cd agent
+docker compose up -d
+```
 
 ---
 
