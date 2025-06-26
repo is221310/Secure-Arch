@@ -84,10 +84,10 @@ public class Program
             {
                 ValidateIssuer = false,
                 ValidateAudience = false,
-                ValidateLifetime = false,
-                ValidateIssuerSigningKey = false,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
                 ValidIssuer = "https://wwww.SecureArch.at",
-                ValidAudience = "https://www.S.at",
+                ValidAudience = "https://www.SecureArch.at",
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
             };
         });

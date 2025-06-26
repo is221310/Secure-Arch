@@ -235,12 +235,13 @@ public class CoreServiceController : ControllerBase
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
+                Secure = false,
                 SameSite = SameSiteMode.None,
                 Expires = DateTimeOffset.UtcNow.AddDays(1)
             };
 
             Response.Cookies.Append("auth-token", accessToken, cookieOptions);
+
             return Ok();
         }
 
@@ -278,6 +279,8 @@ public class CoreServiceController : ControllerBase
             root.TryGetProperty("refresh_token", out var refreshTokenElement))
         {
             var accessToken = accessTokenElement.GetString();
+            var refreshToken = refreshTokenElement.GetString();
+
 
             var cookieOptions = new CookieOptions
             {
@@ -288,6 +291,8 @@ public class CoreServiceController : ControllerBase
             };
 
             Response.Cookies.Append("auth-token", accessToken, cookieOptions);
+            Response.Cookies.Append("refresh-token", refreshToken, cookieOptions);
+
             return Ok();
         }
 
