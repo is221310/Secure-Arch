@@ -105,48 +105,6 @@ namespace TestSecureArchCore
             Assert.Equal(expectedUserId, returnUser.id);
         }
 
-        // Hier gibt es noch ein Problem mit dem Passwort...
-        /*[Fact]
-        public async Task Create_TestUser()
-        {
-            // Arrange
-            var kunde = new Kunde { kunden_id = 1, kunden_name = "Testkunde" };
-            _context.Kunden.Add(kunde);
-
-            var newUser = new User
-            {
-                firstname = "Lisa",
-                lastname = "Neuer",
-                email = "lisa@example.com",
-                telephone = "555-987654",
-                role = "User",
-                address = "Hauptstraße 5",
-                kunden_id = 1,
-                password = "DummyPassword4" 
-            };
-
-            await _context.SaveChangesAsync();
-
-            var expectedUserName = "Lisa";
-            var expectedUserEmail = "lisa@example.com";
-
-            // Act
-            var result = await _controller.Create(newUser);
-
-            // Assert
-            // Rückgabe des Controllers prüfen
-            var createdResult = Assert.IsType<CreatedAtActionResult>(result);
-            var returnedUser = Assert.IsType<User>(createdResult.Value);
-            Assert.Equal(expectedUserName, returnedUser.firstname);
-            Assert.True(returnedUser.id > 0);
-
-            // Zusätzlicher Check in DB
-            var dbUser = await _context.Users.FindAsync(returnedUser.id);
-            Assert.NotNull(dbUser);
-            Assert.Equal(expectedUserEmail, dbUser.email);
-        }*/
-
-
         [Fact]
         public async Task Update_TestUser()
         {
