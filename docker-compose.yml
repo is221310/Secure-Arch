@@ -2,7 +2,8 @@ version: '3.9'
 
 services:
   redis:
-    build: /SRMAuth/redis/
+    # build: /SRMAuth/redis/
+    image: ghcr.io/is221310/secure-arch-redis:latest
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     ports:
@@ -15,9 +16,10 @@ services:
         ipv4_address: 172.20.0.10
 
   auth_app:
-    build:
-      context: /SRMAuth/
-      dockerfile: Dockerfile
+    # build:
+      # context: /SRMAuth/
+      # dockerfile: Dockerfile
+    image: ghcr.io/is221310/secure-arch-auth-api:latest
     ports:
       - "8000:8000"
     env_file:
@@ -33,7 +35,8 @@ services:
         ipv4_address: 172.21.0.20
 
   postgres_app:
-    build: /ContainerServices/databasePostgres
+    # build: /ContainerServices/databasePostgres
+    image: ghcr.io/is221310/secure-arch-postgres:latest
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -48,9 +51,10 @@ services:
         ipv4_address: 172.21.0.10
 
   web_app:
-    build:
-      context: /SecureArchApp/
-      dockerfile: Dockerfile
+    # build:
+      # context: /SecureArchApp/
+      # dockerfile: Dockerfile
+    image: ghcr.io/is221310/secure-arch-webapp:latest
     ports:
       - "0.0.0.0:8080:8080"
     env_file:
@@ -65,9 +69,10 @@ services:
         ipv4_address: 172.50.0.22
   
   core_app:
-    build:
-      context: /SecureArchCore/
-      dockerfile: Dockerfile
+    # build:
+      # context: /SecureArchCore/
+      # dockerfile: Dockerfile
+    image: ghcr.io/is221310/secure-arch-core-api:latest
     ports:
       - "0.0.0.0:5236:8080"
     env_file:
