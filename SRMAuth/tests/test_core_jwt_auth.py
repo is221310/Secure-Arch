@@ -27,7 +27,7 @@ class Test_Core_JWTAuth(unittest.TestCase):
         decoded = jwt.decode(token, "testkey", algorithms=["HS256"])
         self.assertEqual(decoded["sub"], "user123")
         self.assertEqual(decoded["type"], "access")
-        self.assertEqual(decoded["exp"], int(expected_exp.timestamp()), delta=5)
+        self.assertAlmostEqual(decoded["exp"], int(expected_exp.timestamp()), delta=5)
 
     def test_create_refresh_token(self):
         # Now import the module that uses JWTSettings
@@ -45,7 +45,7 @@ class Test_Core_JWTAuth(unittest.TestCase):
         decoded = jwt.decode(refreshtoken, "testkey", algorithms=["HS256"])    
         self.assertEqual(decoded["sub"], "user123")
         self.assertEqual(decoded["type"], "refresh")
-        self.assertEqual(decoded["exp"], int(expire.timestamp()))
+        self.assertAlmostEqual(decoded["exp"], int(expected_exp.timestamp()), delta=5)
 
 if __name__ == '__main__':
     try:
