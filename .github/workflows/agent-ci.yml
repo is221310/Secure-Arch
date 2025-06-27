@@ -52,21 +52,31 @@ jobs:
           REPO_OWNER: ${{ github.repository_owner }}
           PACKAGE_NAME: secure-arch-mqtt-agent
         run: |
-          echo "Setting visibility of $PACKAGE_NAME to public"
-
-          VERSION_ID=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+          echo "Fetching versions for $PACKAGE_NAME..."
+          
+          RESPONSE=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/orgs/$REPO_OWNER/packages/container/$PACKAGE_NAME/versions" | jq '.[0].id')
-
-          if [[ "$VERSION_ID" != "null" ]]; then
-            curl -X PATCH -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/orgs/$REPO_OWNER/packages/container/$PACKAGE_NAME/versions")
+          
+          echo "Response:"
+          echo "$RESPONSE"
+          
+          # Try to parse the first version ID
+          VERSION_ID=$(echo "$RESPONSE" | jq 'if type=="array" and length>0 then .[0].id else empty end')
+          
+          if [[ -n "$VERSION_ID" ]]; then
+            echo "Setting visibility of version $VERSION_ID to public..."
+          
+            PATCH_RESPONSE=$(curl -X PATCH -s -H "Authorization: Bearer $GITHUB_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               -d '{"visibility":"public"}' \
-              "https://api.github.com/orgs/$REPO_OWNER/packages/container/$PACKAGE_NAME/versions/$VERSION_ID"
-
-            echo "Visibility set to public for version $VERSION_ID"
+              "https://api.github.com/orgs/$REPO_OWNER/packages/container/$PACKAGE_NAME/versions/$VERSION_ID")
+          
+            echo "Patch response:"
+            echo "$PATCH_RESPONSE"
+          
           else
-            echo "No versions found for $PACKAGE_NAME"
+            echo "No versions found or unable to parse versions for $PACKAGE_NAME"
             exit 1
           fi
 
