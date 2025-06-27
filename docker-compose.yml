@@ -11,7 +11,8 @@ services:
       - internal
 
   agent:
-    image: ghcr.io/is221310/secure-arch-mqtt-agent:latest
+#    image: ghcr.io/is221310/secure-arch-mqtt-agent:latest
+    build: ./app
     container_name: agent
     depends_on:
       - mqtt
