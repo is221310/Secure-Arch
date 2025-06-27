@@ -29,6 +29,7 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
       - [3. Docker-Container starten](#3-docker-container-starten)
     - [🌐 Lokale Ports \& Services](#-lokale-ports--services)
     - [⚠️ Hinweis: Nur für Entwicklungs- und Demo-Zwecke](#️-hinweis-nur-für-entwicklungs--und-demo-zwecke)
+    - [🔐 Test-Zugangsdaten für SecureArch (lokale Entwicklungsumgebung)](#-test-zugangsdaten-für-securearch-lokale-entwicklungsumgebung)
     - [Agent (z. B. auf Raspberry Pi)](#agent-zb-auf-raspberry-pi)
   - [👥 Teammitglieder](#-teammitglieder)
   - [📄 Lizenz](#-lizenz)
@@ -202,6 +203,19 @@ Es fehlen unter anderem:
 🔒 Nutze dieses Setup **nur lokal oder in geschlossenen Testumgebungen**!
 
   
+---
+
+### 🔐 Test-Zugangsdaten für SecureArch (lokale Entwicklungsumgebung)
+
+Frontend-Login: http://localhost:8080/
+
+Benutzername: erika@example.com
+Passwort:     12345
+
+> Hinweis:
+Diese Zugangsdaten sind ausschließlich für Demo- und Entwicklungszwecke vorgesehen.
+Verwende sie nicht in einer Produktionsumgebung.
+
 ---
 
 ### Agent (z. B. auf Raspberry Pi)
