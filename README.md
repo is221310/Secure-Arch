@@ -44,10 +44,7 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
   - **Agent** (Appliance)
   - **Core-Service** (Business-Logik & zentrale Datenhaltung)
   - **Token-Service** (Security, Auth, NoSQL)
-
-📷 *Architekturübersicht:*  
-![Architekturdiagramm](./docs/architektur.png)
-
+  
 ---
 
 ### 🔐 Sicherheit & Zugriff
@@ -57,8 +54,8 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
   - **Kunde**: Einsicht in eigene Sensordaten
   - **Admin**: Volle Konfiguration & Einsicht
 
-📷 *Beispielhafte UI-Ansicht für Rollen:*  
-*➤ Screenshots der WebUI mit Kunden- und Adminsicht könnten hier eingefügt werden.*
+📷 *UI-Ansicht für den Adminbereich:*  
+![UI-Example](assets/AdminbereichSecureArch.png)
 
 ---
 
@@ -101,7 +98,7 @@ Sequenzdiagramm zur API-Kommunikation mit Tokenhandling wäre hier hilfreich.
 
 ## 🏗️ Systemarchitektur
 
-![Systemarchitektur](assets/systemarchitektur.png)
+![Systemarchitektur](assets/systemarchitektur.png) 
 
 ---
 
