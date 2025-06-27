@@ -17,6 +17,13 @@ jobs:
       - name: Repository klonen
         uses: actions/checkout@v3
 
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
       - name: Python einrichten
         uses: actions/setup-python@v5
         with:
