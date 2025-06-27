@@ -40,8 +40,8 @@ jobs:
 
       - name: Docker Build and push Agent image
         run: |
-          docker build -t ghcr.io/is221310/secure-arch-mqtt-agent ./app
-          docker push ghcr.io/is221310/secure-arch-mqtt-agent:latest
+          docker build -t ghcr.io/${{ github.repository_owner }}/secure-arch-mqtt-agent ./app
+          docker push ghcr.io/${{ github.repository_owner }}/secure-arch-mqtt-agent:latest
 
       - name: CI abgeschlossen
         run: echo "MQTT Agent CI erfolgreich abgeschlossen"
