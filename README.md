@@ -17,7 +17,6 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
   - [🏗️ Systemarchitektur](#️-systemarchitektur)
   - [📊 ER-Diagramm](#-er-diagramm)
   - [🧱 Klassendiagramme](#-klassendiagramme)
-    - [SecureArchCore](#securearchcore)
   - [📡 API-Dokumentation](#-api-dokumentation)
     - [Agent → Core](#agent--core)
     - [Frontend → Core](#frontend--core)
@@ -74,11 +73,15 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
   - Pings an IP-Adressen, zentral definierbar über das Frontend
 - **Agent → Core Kommunikation** über **HTTPS REST-API**
 
-📷 *Geräteintegration (z. B. MQTT, Shelly-Datenfluss):*  
-*➤ Diagramm zum Datenfluss zwischen Shelly, MQTT und Agent könnte hier ergänzt werden.*
+📷 *Geräteintegration (z. B. MQTT, Shelly-Datenfluss):*
+![Shelly-Integration](assets/ShellyToCore.png)
+
+Diagramm des Datenfluss zwischen Shelly, MQTT und Agent
+
 
 📷 *Kommunikation Agent ↔ Core inkl. Tokenfluss:*  
-*➤ Sequenzdiagramm zur API-Kommunikation mit Tokenhandling wäre hier hilfreich.*
+![JWT-FLowchart](assets/FlowchartTokens.png)
+Sequenzdiagramm zur API-Kommunikation mit Tokenhandling wäre hier hilfreich.
 
 ---
 
@@ -110,8 +113,7 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
 
 ## 🧱 Klassendiagramme
 
-### SecureArchCore
-![Klassendiagramm](./docs/klassendiagramm.png)
+![Klassendiagramm](assets/ClassDiagramSecureArch.png)
 
 ---
 
