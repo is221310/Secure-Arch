@@ -41,50 +41,17 @@ jobs:
         run: |
           python -m py_compile app/shelly_door_v2.2.py
 
-      - name: Docker Build and push Agent image
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker Build and push Agent image (multi-arch)
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/secure-arch-mqtt-agent ./app
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            -t ghcr.io/${{ github.repository_owner }}/secure-arch-mqtt-agent:latest \
+            --push \
+            ./app
           docker push ghcr.io/${{ github.repository_owner }}/secure-arch-mqtt-agent:latest
-
-      - name: Debug token user (PAT_TOKEN)
-        env:
-          TOKEN: ${{ secrets.PAT_TOKEN }}
-        run: |
-          echo "Token is for user:"
-          curl -s -H "Authorization: Bearer $TOKEN" https://api.github.com/user | jq '.login'
-
-      - name: Wait for package processing
-        run: sleep 15
-
-      - name: Set GHCR package visibility to public
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-          REPO_OWNER: ${{ github.repository_owner }}
-          PACKAGE_NAME: secure-arch-mqtt-agent
-        run: |
-          echo "Fetching versions for $PACKAGE_NAME..."
-          RESPONSE=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/users/$REPO_OWNER/packages/container/$PACKAGE_NAME/versions")
-
-          echo "Response:"
-          echo "$RESPONSE" | jq .
-
-          VERSION_ID=$(echo "$RESPONSE" | jq '.[0].id')
-
-          if [[ "$VERSION_ID" != "null" ]]; then
-            echo "Setting visibility of version $VERSION_ID to public..."
-            PATCH_RESPONSE=$(curl -X PATCH -s -H "Authorization: Bearer $GITHUB_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              -d '{"visibility":"public"}' \
-              "https://api.github.com/users/$REPO_OWNER/packages/container/$PACKAGE_NAME/versions/$VERSION_ID")
-
-            echo "Patch response:"
-            echo "$PATCH_RESPONSE" | jq .
-          else
-            echo "No versions found for $PACKAGE_NAME"
-            exit 1
-          fi
 
       - name: CI abgeschlossen
         run: echo "MQTT Agent CI erfolgreich abgeschlossen" 
