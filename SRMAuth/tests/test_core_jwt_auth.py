@@ -17,17 +17,17 @@ class Test_Core_JWTAuth(unittest.TestCase):
         
         # Arrange
         data = {"sub": "user123"}
-        now = datetime.now(timezone.utc)
-        expire = now + timedelta(minutes=15)
+        expiration_minutes = int(os.environ["JWT_EXPIRATION_TIME"])
+        expected_exp = datetime.utcnow() + timedelta(minutes=expiration_minutes)
 
         # Act
-        token = create_access_token(data, expire)
+        token = create_access_token(data, expire=None)
 
         # Assert
         decoded = jwt.decode(token, "testkey", algorithms=["HS256"])
         self.assertEqual(decoded["sub"], "user123")
         self.assertEqual(decoded["type"], "access")
-        self.assertEqual(decoded["exp"], int(expire.timestamp()))
+        self.assertEqual(decoded["exp"], int(expected_exp.timestamp()), delta=5)
 
     def test_create_refresh_token(self):
         # Now import the module that uses JWTSettings
@@ -35,11 +35,11 @@ class Test_Core_JWTAuth(unittest.TestCase):
 
         # Arrange
         data = {"sub": "user123"}  
-        now = datetime.now(timezone.utc)
-        expire = now + timedelta(days=30)
+        expiration_minutes = int(os.environ["JWT_REFRESH_EXPIRATION_TIME"])
+        expected_exp = datetime.utcnow() + timedelta(minutes=expiration_minutes)
 
         # Act
-        refreshtoken = create_refresh_token(data, expire)
+        refreshtoken = create_refresh_token(data, expire=None)
 
         # Assert
         decoded = jwt.decode(refreshtoken, "testkey", algorithms=["HS256"])    
