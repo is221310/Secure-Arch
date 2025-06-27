@@ -1,17 +1,12 @@
-
 name: MQTT Agent CI
 
 on:
   push:
-    paths:
-      - 'app/**'
-      - 'config/**'
-      - 'docker-compose.yml'
+    branches:
+      - master
   pull_request:
-    paths:
-      - 'app/**'
-      - 'config/**'
-      - 'docker-compose.yml'
+    branches:
+      - master
 
 jobs:
   build-mqtt-agent:
