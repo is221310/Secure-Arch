@@ -12,6 +12,9 @@ jobs:
   build-mqtt-agent:
     runs-on: ubuntu-latest
     name: MQTT Agent Build & Test
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Repository klonen
