@@ -33,7 +33,6 @@ Ein IoT-basiertes, Microservice-orientiertes Überwachungssystem zur Absicherung
     - [Agent (z. B. auf Raspberry Pi)](#agent-zb-auf-raspberry-pi)
   - [👥 Teammitglieder](#-teammitglieder)
   - [📄 Lizenz](#-lizenz)
-  - [📎 Anhang](#-anhang)
 
 
 ---
@@ -232,11 +231,3 @@ docker compose up -d
 ## 📄 Lizenz
 
 MIT License – siehe `LICENSE`
-
----
-
-## 📎 Anhang
-
-- `docs/er-diagramm.png`
-- `docs/klassendiagramm.png`
-- `docs/docker-setup.md`
