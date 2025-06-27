@@ -39,7 +39,7 @@ jobs:
 
       - name: Python Syntax-Check
         run: |
-          python -m py_compile app/shelly_door_v2.2.py
+          python -m py_compile app/shelly_door_v2.3.py
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

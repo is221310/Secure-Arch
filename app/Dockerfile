@@ -13,6 +13,6 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Skript kopieren
-COPY shelly_door_v2.2.py .
+COPY shelly_door_v2.3.py .
 
-CMD ["python", "shelly_door_v2.2.py"]
+CMD ["python", "shelly_door_v2.3.py"]
