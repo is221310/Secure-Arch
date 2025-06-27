@@ -78,3 +78,8 @@ jobs:
         run: |
           docker build -t ghcr.io/is221310/secure-arch-core-api:latest ./SecureArchCore
           docker push ghcr.io/is221310/secure-arch-core-api:latest
+
+      - name: Build and push Webapp image 
+        run: |
+          docker build -t ghcr.io/is221310/secure-arch-webapp:latest ./SecureArchApp
+          docker push ghcr.io/is221310/secure-arch-webapp:latest
