@@ -31,9 +31,10 @@ jobs:
         run: |
           python -m py_compile app/shelly_door_v2.2.py
 
-      - name: Docker Build testen
+      - name: Docker Build and push Agent image
         run: |
-          docker build -t mqtt-agent ./app
+          docker build -t ghcr.io/is221310/secure-arch-mqtt-agent ./app
+          docker push ghcr.io/is221310/secure-arch-mqtt-agent:latest
 
       - name: CI abgeschlossen
         run: echo "MQTT Agent CI erfolgreich abgeschlossen"
