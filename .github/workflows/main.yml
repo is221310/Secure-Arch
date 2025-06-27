@@ -36,10 +36,10 @@ jobs:
           pip install -r SRMAuth/requirements.txt
           pip install pytest  # or whatever you use
       
-#      - name: Run Python unit tests
-#        run: |
-#          export PYTHONPATH=SRMAuth
-#          python -m tests.test_core_jwt_auth
+      - name: Run Python unit tests
+        run: |
+          export PYTHONPATH=SRMAuth
+          python -m tests.test_core_jwt_auth
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
