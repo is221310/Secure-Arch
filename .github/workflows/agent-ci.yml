@@ -46,5 +46,29 @@ jobs:
           docker build -t ghcr.io/${{ github.repository_owner }}/secure-arch-mqtt-agent ./app
           docker push ghcr.io/${{ github.repository_owner }}/secure-arch-mqtt-agent:latest
 
+      - name: Set GHCR package visibility to public
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          PACKAGE_NAME: secure-arch-mqtt-agent
+        run: |
+          echo "Setting visibility of $PACKAGE_NAME to public"
+
+          VERSION_ID=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/users/$REPO_OWNER/packages/container/$PACKAGE_NAME/versions" | jq '.[0].id')
+
+          if [[ "$VERSION_ID" != "null" ]]; then
+            curl -X PATCH -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -d '{"visibility":"public"}' \
+              "https://api.github.com/users/$REPO_OWNER/packages/container/$PACKAGE_NAME/versions/$VERSION_ID"
+
+            echo "Visibility set to public for version $VERSION_ID"
+          else
+            echo "No versions found for $PACKAGE_NAME"
+            exit 1
+          fi
+
       - name: CI abgeschlossen
         run: echo "MQTT Agent CI erfolgreich abgeschlossen"
