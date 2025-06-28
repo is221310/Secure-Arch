@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 # Konfiguration
 load_dotenv()
-BASE_URL = "http://192.168.0.51:5236"
+BASE_URL = "http://192.168.0.50:5236"
 SESSION = requests.Session()
 SESSION.verify = False  # Nur für Selbstsignierte Zertifikate
 
