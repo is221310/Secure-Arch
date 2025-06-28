@@ -1,3 +1,5 @@
+# this script was created with the help of KI
+
 import os
 import time
 import json
