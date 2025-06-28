@@ -94,6 +94,7 @@ Sequenzdiagramm zur API-Kommunikation mit Tokenhandling wäre hier hilfreich.
 
 - **CI Pipeline** via GitHub Actions
 - Nutzung von GitHub Secrets und GitHub Container Registry
+- in CI Pipeline integrierte Unit Tests
 
 ---
 
